@@ -172,7 +172,7 @@
     openLogs: async () => {},
     checkUpdate: async () => ({ available: false }),
     openLink: async (url) => window.open(url, "_blank"),
-    appInfo: async () => ({ version: "0.1.5", repo: "https://github.com/Mark9712Seto/IrisVolto" }),
+    appInfo: async () => ({ version: "0.2.0", repo: "https://github.com/Mark9712Seto/IrisVolto" }),
     localHealth: async () => ({ running: true, ultima_frase: { calcolo_s: 0.31, audio_s: 3.1 } }),
     saveIsland: async () => {},
     // solo demo: simula la scorciatoia "premi e parla"

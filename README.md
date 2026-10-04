@@ -9,7 +9,7 @@
 Two animated eyes in a Dynamic-Island-style notch that show what your agent is doing.<br>
 Hover to chat · hold a shortcut to talk · hear it answer out loud.
 
-[**▶ Live demo**](https://mark9712seto.github.io/IrisNotch/demo.html) · [**Website**](https://mark9712seto.github.io/IrisNotch/) · [**Download for Windows**](../../releases/latest) · [All animations](https://mark9712seto.github.io/IrisNotch/animations.html)
+[**▶ Live demo**](https://mark9712seto.github.io/IrisNotch/demo.html) · [**Website**](https://mark9712seto.github.io/IrisNotch/) · [**Download for Windows**](../../releases/latest) · [All animations](https://mark9712seto.github.io/IrisNotch/animations.html) · [What's new](CHANGELOG.md)
 
 <img src="docs/images/hero.gif" width="720" alt="The eyes going through listening, thinking, using a tool, answering, asking for approval and done">
 

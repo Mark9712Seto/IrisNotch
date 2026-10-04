@@ -82,7 +82,7 @@ Engines:
   - **Occhi che seguono** *(eyes follow)* the mouse, can be turned off;
   - **Rimettila al centro** *(put it back in the center)*.
 - Settings → **Generale** *(general)*: your **birthday** (day and month: confetti on that day), **Avvia con Windows** *(start with Windows)*, the **black frame** around the eyes (0–16 px) and the **size** of the whole app (Piccola / Normale / Grande: small, normal, large).
-- With the **pin** on and the island open, grabbing it by the eyes moves the whole open window.
+- With the **pin** on and the island open, grabbing it by the eyes moves the whole open window. Drop it past an edge or over the taskbar and it springs back inside; otherwise it stays exactly where you left it.
 - Settings → **Debug e prove** *(debug and tests)*: debug mode (detailed log), **Mostra l'area** *(show the area where the eyes play)*, latest errors and the log folder.
 - Every option has a **?**: hover it to see what it does.
 - **Changes only apply when you press Salva** *(save)*. As soon as you change something, **Annulla** *(cancel)* appears and the island won't close by itself until you choose. Cancel, the **back arrow**, `Esc` or the **settings icon** again discard the changes and close.
@@ -124,6 +124,7 @@ The title at the top opens the menu:
 
 ## Known issues
 
+- **Dragging:** since 0.2.0 the window no longer moves while you drag (only the island moves inside the page): no trails, disappearing or ghost images. If you still see glitches, open an *issue* on GitHub with a video.
 - **Local transcription** has had little testing with real models so far. If it doesn't work, check **Debug e prove → Ultimi errori** *(latest errors)*.
-- **Shortcuts** are typed by hand in the settings (e.g. `Ctrl+Shift+K`). If another program already uses a shortcut, Windows won't assign it.
+- **Shortcuts:** in the settings, click the field and press the combination (e.g. `Ctrl+Shift+K`): it's recorded for you. It needs at least one of Ctrl, Alt, Shift and Win, or an F1-F24 key; Esc cancels. If another program already uses a shortcut, Windows won't assign it.
 - **If something goes wrong:** turn on **debug mode**, do it again and open an *issue* on GitHub with the **latest errors** attached (the log never contains your keys).

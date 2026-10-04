@@ -297,6 +297,10 @@ label input[type=file]{display:block;margin-top:6px;font-size:12px;color:var(--m
 .set-f.dirty #sSave{box-shadow:0 0 0 2px rgba(124,196,255,.35)}
 .set-f #sSave{flex:1}
 
+/* campi delle scorciatoie: si registrano premendo i tasti */
+input.keycap{cursor:pointer;font-family:ui-monospace,Consolas,monospace;caret-color:transparent}
+input.keycap.rec{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 30%,transparent);color:var(--accent)}
+
 </style>
 </head>
 <body>
@@ -429,10 +433,10 @@ label input[type=file]{display:block;margin-top:6px;font-size:12px;color:var(--m
           </div>
         </section>
         <section>
-          <h3>Scorciatoie</h3>
+          <h3>Scorciatoie <i class="q" data-tip="Clicca nel campo e premi la combinazione di tasti che vuoi usare: si scrive da sola. Serve almeno un tasto tra Ctrl, Alt, Shift e Win (oppure un tasto F1-F24). Esc annulla.">?</i></h3>
           <div class="row2 two">
-            <label>Premi e parla<input id="sPtt"></label>
-            <label>Apri l'isola<input id="sOpen"></label>
+            <label>Premi e parla<input id="sPtt" class="keycap" readonly placeholder="Clicca e premi i tasti"></label>
+            <label>Apri l'isola<input id="sOpen" class="keycap" readonly placeholder="Clicca e premi i tasti"></label>
           </div>
         </section>
         <section>
@@ -1669,7 +1673,7 @@ label input[type=file]{display:block;margin-top:6px;font-size:12px;color:var(--m
     openLogs: async () => {},
     checkUpdate: async () => ({ available: false }),
     openLink: async (url) => window.open(url, "_blank"),
-    appInfo: async () => ({ version: "0.1.5", repo: "https://github.com/Mark9712Seto/IrisVolto" }),
+    appInfo: async () => ({ version: "0.2.0", repo: "https://github.com/Mark9712Seto/IrisVolto" }),
     localHealth: async () => ({ running: true, ultima_frase: { calcolo_s: 0.31, audio_s: 3.1 } }),
     saveIsland: async () => {},
     // solo demo: simula la scorciatoia "premi e parla"
@@ -2063,7 +2067,14 @@ label input[type=file]{display:block;margin-top:6px;font-size:12px;color:var(--m
     }
     return { x: cl(c.x + c.w / 2 - w / 2, 0, scr.w - w), y: 0, w, h };
   }
-  function winFor(r) { const m = MARGIN[bubble() ? "bubble" : "top"]; return { x: r.x - m.l, y: r.y - m.t, w: r.w + m.l + m.r, h: r.h + m.t + m.b }; }
+  /* La finestra parte sempre dall'angolo in alto a sinistra dello schermo e arriva fin dove serve (isola più il margine
+     per l'ombra): così cambia solo larghezza e altezza, mai l'angolo di partenza. Cambiando grandezza Windows mostra per
+     un istante l'ultimo fotogramma: con l'angolo fermo resta esattamente dov'era, quindi niente "fantasma" e niente
+     bisogno di nascondere l'isola. La parte vuota lascia passare i clic (hitTest). */
+  function winFor(r) { const m = MARGIN[bubble() ? "bubble" : "top"]; return { x: 0, y: 0, w: Math.min(scr.w, r.x + r.w + m.r), h: Math.min(scr.h - 1, r.y + r.h + m.b) }; }
+  /* Mai grande esattamente quanto lo schermo: una finestra senza bordi della stessa misura del monitor Windows la tratta
+     come un'app a schermo intero e cambia modo di disegnarla mentre il contenuto si muove (lampi durante il trascinamento). */
+  const fullScreenWin = () => ({ x: 0, y: 0, w: scr.w, h: scr.h - 1 });
   function union(a, b) { const x = Math.min(a.x, b.x), y = Math.min(a.y, b.y); return { x, y, w: Math.max(a.x + a.w, b.x + b.w) - x, h: Math.max(a.y + a.h, b.y + b.h) - y }; }
   function setIsland(r, anim) {
     isl.classList.toggle("noanim", !anim);
@@ -2167,12 +2178,14 @@ label input[type=file]{display:block;margin-top:6px;font-size:12px;color:var(--m
     isl.classList.add("dragging");
     const p = await pointer(e);
     if (p.screen && p.screen.name !== undefined && p.screen.name !== scr.name) scr = p.screen;
-    if (expanded && pinned && Iris.isTauri && B.dragBegin) {
-      // aperta e fissata con la puntina: si sposta tutta la finestra aperta, senza richiuderla
+    if (expanded && pinned && Iris.isTauri) {
+      // aperta e fissata con la puntina: si sposta tutta l'isola aperta, senza richiuderla (come la bolla: dentro la pagina)
       const c = collapsedRect();
-      d.keep = true; d.native = true; d.off = { x: p.x - (c.x + c.w / 2), y: p.y - (c.y + c.h / 2) };
-      const z = zoom();
-      B.dragBegin((p.x - win.x) * z, (p.y - win.y) * z, win.w * z, win.h * z).catch(() => {});
+      d.keep = true; d.off = { x: p.x - (c.x + c.w / 2), y: p.y - (c.y + c.h / 2) };
+      d.grab = { x: p.x - cur.x, y: p.y - cur.y }; // dove l'hai presa, rispetto all'angolo dell'isola aperta
+      d.overlay = true;
+      await coverScreen(cur);
+      dragLoop(d);
       return;
     }
     if (expanded) {
@@ -2185,18 +2198,56 @@ label input[type=file]{display:block;margin-top:6px;font-size:12px;color:var(--m
     const c = collapsedRect();
     // dove l'hai presa, rispetto al centro: così non salta sotto il puntatore
     d.off = { x: p.x - (c.x + c.w / 2), y: p.y - (c.y + c.h / 2) };
-    if (!Iris.isTauri || !B.dragBegin) return;
-    /* dentro Tauri la finestra la sposta il programma: qui diventa piccola quanto la bolla (più il margine
-       per l'ombra) e da ora segue il puntatore da sola. Durante il cambio l'isola resta nascosta un istante,
-       così non si vede mai nel posto sbagliato. */
+    if (!Iris.isTauri) return;
+    /* Dentro Tauri la finestra NON si muove durante il trascinamento: spostare una finestra trasparente con dentro
+       WebView2 la faceva sparire o lasciare scie (si ridisegna in ritardo). Invece, per il tempo del trascinamento,
+       la finestra copre tutto lo schermo e si sposta solo l'isola dentro la pagina; lasciata, la finestra torna
+       piccola dove l'hai messa. La finestra cambia grandezza solo all'inizio, alla fine e passando a un altro schermo. */
     isl.classList.toggle("bubble", bubble()); shape(); cur = c;
-    const m = MARGIN.bubble, w = { x: c.x - m.l, y: c.y - m.t, w: c.w + m.l + m.r, h: c.h + m.t + m.b };
+    d.overlay = true;
+    await coverScreen(c);
+    dragLoop(d);
+  }
+  // la finestra copre tutto lo schermo dove sta il mouse, con l'isola al suo posto (nascosta durante il cambio)
+  async function coverScreen(c, newScreen) {
+    const w = fullScreenWin();
+    if (!newScreen) { setIsland(c, false); await setWin(w); return; } // stesso angolo: l'isola resta dov'è, nessun lampo
+    // su un altro schermo l'angolo cambia: lì si nasconde un attimo, per non mostrare un fantasma
     isl.style.visibility = "hidden";
-    await setWin(w); setIsland(c, false);
-    isl.style.visibility = ""; // subito: aspettando il fotogramma dopo, mentre la finestra si muove poteva restare invisibile
-    d.native = true;
-    const z = zoom(); // il programma conta in px logici dello schermo, l'app in px zoomati
-    B.dragBegin((p.x - w.x) * z, (p.y - w.y) * z, w.w * z, w.h * z).catch(() => {});
+    try { await painted(); await setWin(w); setIsland(c, false); await viewportReady(w); }
+    finally { isl.style.visibility = ""; }
+  }
+  /* Cambiando grandezza alla finestra, Windows mostra per un istante l'ultimo fotogramma nella posizione nuova:
+     se l'isola era visibile, compariva un "fantasma" degli occhi in un altro punto dello schermo. Quindi prima si
+     aspetta che l'isola nascosta sia davvero disegnata, e dopo che la pagina abbia preso la misura nuova. */
+  const painted = () => new Promise((r) => { let done = false; const f = () => { if (!done) { done = true; r(); } }; requestAnimationFrame(() => requestAnimationFrame(f)); setTimeout(f, 80); });
+  async function viewportReady(w) {
+    const z = zoom(), t0 = performance.now();
+    while (performance.now() - t0 < 300 && (Math.abs(innerWidth - w.w * z) > 2 || Math.abs(innerHeight - w.h * z) > 2)) await new Promise((r) => setTimeout(r, 10));
+    await painted();
+  }
+  // l'isola segue il puntatore: la posizione la dà il programma, così non conta dove sono gli eventi del mouse
+  async function dragLoop(d) {
+    while (drag === d) {
+      let q;
+      try { q = await B.pointerInfo(); } catch (err) { break; }
+      if (drag !== d) break;
+      if (q.down === false) { endDrag({ type: "overlay" }); break; }
+      const sc = q.screen && q.screen.name !== undefined ? zs(q.screen) : scr;
+      const x = (q.px - sc.px) / sc.scale, y = (q.py - sc.py) / sc.scale, h = AH + 2 * border(), cx = x - d.off.x, cy = y - d.off.y;
+      const mode = cy - h / 2 < SNAP ? "top" : "bubble"; // in cima è tacca, più giù è bolla
+      I().x = cx; I().y = cy;
+      let c;
+      if (d.keep) c = { x: x - d.grab.x, y: y - d.grab.y, w: cur.w, h: cur.h }; // aperta: segue libera, senza limiti
+      else {
+        if (mode !== I().mode) { I().mode = mode; isl.classList.toggle("bubble", bubble()); shape(); }
+        c = collapsedRect();
+      }
+      cur = c;
+      if (sc.name !== scr.name) { scr = sc; await coverScreen(c, true); } // passata su un altro schermo
+      else setIsland(c, false);
+      await new Promise((r) => setTimeout(r, 8));
+    }
   }
   // posizione durante il trascinamento nativo: serve solo a sapere se è tacca o bolla e su quale schermo
   if (Iris.isTauri && B.onDrag) {
@@ -2215,7 +2266,7 @@ label input[type=file]{display:block;margin-top:6px;font-size:12px;color:var(--m
   isl.addEventListener("pointermove", async (e) => {
     const d = drag; if (!d) return;
     if (!d.on && Math.hypot(e.clientX - d.sx, e.clientY - d.sy) > 5) { clearTimeout(d.t); await beginDrag(e); }
-    if (!d.on || !d.off || d.native || moving) return;
+    if (!d.on || !d.off || d.native || d.overlay || moving) return;
     moving = true;
     try {
       const p = await pointer(e);
@@ -2236,6 +2287,19 @@ label input[type=file]{display:block;margin-top:6px;font-size:12px;color:var(--m
         const c = collapsedRect(); I().x = c.x + c.w / 2; I().y = bubble() ? c.y + c.h / 2 : null; I().screen = scr.name || "";
         B.saveIsland(I()).catch(() => {});
       };
+      if (d.overlay) {
+        // fine: se è rimasta fuori dai bordi (o sopra la barra delle applicazioni) torna dentro con una molla,
+        // ancora dentro la pagina; poi la finestra torna piccola attorno all'isola, dove l'hai lasciata
+        (async () => {
+          if (d.keep) keepWhereDropped();
+          isl.classList.toggle("bubble", bubble()); shape();
+          await springTo(expanded ? expandedRect() : collapsedRect());
+          try { await place(false); } // stesso angolo: la finestra si restringe attorno all'isola senza lampi
+          catch (err) { dlog("trascinamento: " + err); }
+          save();
+        })();
+        return;
+      }
       if (!d.native) return save();
       // fine del trascinamento nativo: posizione esatta del puntatore, poi la finestra torna grande come prima
       // con l'isola dove l'hai lasciata (nascosta per un istante durante il cambio)
@@ -2248,8 +2312,9 @@ label input[type=file]{display:block;margin-top:6px;font-size:12px;color:var(--m
           const cx = p.x - d.off.x, cy = p.y - d.off.y;
           I().mode = cy - (AH + 2 * border()) / 2 < SNAP ? "top" : "bubble"; I().x = cx; I().y = cy;
         } catch (err) {}
-        await place(false);
-        isl.style.visibility = "";
+        try { await place(false); }
+        catch (err) { dlog("trascinamento: " + err); }
+        finally { isl.style.visibility = ""; }
         save();
       })();
       return;
@@ -2259,6 +2324,34 @@ label input[type=file]{display:block;margin-top:6px;font-size:12px;color:var(--m
     if (!expanded) { clearTimeout(hoverT); expand(); }
     else if (d.onEyes) eyes.poke();
   }
+  /* Isola aperta lasciata dopo il trascinamento con la puntina: resta dove l'hai messa, spostata solo quanto
+     basta per stare dentro lo schermo (sopra la barra delle applicazioni). Si sceglie la tacca o la bolla
+     e il suo punto in modo che l'isola aperta torni proprio lì (si apre sempre da un angolo della bolla). */
+  function keepWhereDropped() {
+    const r = cur, w = r.w, h = r.h;
+    if (r.y < SNAP) {
+      I().mode = "top"; I().y = null;
+      I().x = cl(r.x, 0, scr.w - w) + w / 2;
+      return;
+    }
+    I().mode = "bubble";
+    const tx = cl(r.x, scr.wx + 8, scr.wx + scr.ww - w - 8), ty = cl(r.y, scr.wy + 8, scr.wy + scr.wh - h - 8);
+    const c = collapsedRect(), cw = c.w, ch = c.h;
+    const left = tx + cw / 2 < scr.w / 2, up = ty + ch / 2 < scr.wy + scr.wh / 2;
+    I().x = left ? tx + cw / 2 : tx + w - cw / 2;
+    I().y = up ? ty + ch / 2 : ty + h - ch / 2;
+  }
+  /* Molla: l'isola va al suo posto passando un po' oltre e assestandosi. Si muove solo dentro la pagina
+     (la finestra copre ancora tutto lo schermo), quindi è fluida come un'animazione CSS qualunque. */
+  async function springTo(to) {
+    const from = cur;
+    if (!from || reduceMotion || Math.hypot(to.x - from.x, to.y - from.y) < 2) { cur = to; return; }
+    isl.style.transition = "left .48s cubic-bezier(.3,1.5,.55,1),top .48s cubic-bezier(.3,1.5,.55,1),border-radius .3s";
+    cur = to; setIsland(to, true);
+    await new Promise((r) => setTimeout(r, 500));
+    isl.style.transition = "";
+  }
+  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
   isl.addEventListener("pointerup", endDrag);
   isl.addEventListener("pointercancel", endDrag);
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") { if ($("settings").classList.contains("show")) closeSettings(); else if (voiceMode) cancelVoice(); else collapse(true); } });
@@ -2836,6 +2929,30 @@ label input[type=file]{display:block;margin-top:6px;font-size:12px;color:var(--m
   // impostazioni: le modifiche valgono solo con Salva. Con modifiche in sospeso l'isola non si richiude da sola;
   // freccia indietro, Annulla, Esc o di nuovo l'icona delle impostazioni le scartano e chiudono.
   let setSnap = null; var setDirty = false;
+  /* Scorciatoie: clicchi nel campo e premi la combinazione, si scrive da sola nel formato che capisce il programma
+     (per esempio Ctrl+Alt+Space). I nomi dei tasti sono quelli fisici (KeyboardEvent.code), uguali con ogni tastiera. */
+  function keyName(code) {
+    if (/^Key[A-Z]$/.test(code)) return code.slice(3);
+    if (/^Digit[0-9]$/.test(code)) return code.slice(5);
+    return code; // Space, F5, ArrowUp, Numpad1, Backquote, Minus…
+  }
+  document.querySelectorAll("input.keycap").forEach((inp) => {
+    let before = "";
+    inp.addEventListener("focus", () => { before = inp.value; inp.classList.add("rec"); inp.value = ""; inp.placeholder = "Premi i tasti…"; });
+    inp.addEventListener("blur", () => { inp.classList.remove("rec"); if (!inp.value || /\+$/.test(inp.value)) inp.value = before; inp.placeholder = "Clicca e premi i tasti"; });
+    inp.addEventListener("keydown", (e) => {
+      e.preventDefault(); e.stopPropagation();
+      if (e.key === "Escape") { inp.value = before; inp.blur(); return; }
+      const mods = [e.ctrlKey && "Ctrl", e.altKey && "Alt", e.shiftKey && "Shift", e.metaKey && "Super"].filter(Boolean);
+      const onlyMod = /^(Control|Alt|Shift|Meta|OS)(Left|Right)?$/.test(e.code) || ["Control", "Alt", "Shift", "Meta"].includes(e.key);
+      if (onlyMod) { inp.value = mods.length ? mods.join("+") + "+" : ""; return; } // ancora in attesa del tasto finale
+      const k = keyName(e.code);
+      if (!mods.length && !/^F([1-9]|1[0-9]|2[0-4])$/.test(k)) { inp.value = ""; inp.placeholder = "Serve anche Ctrl, Alt, Shift o Win"; return; }
+      inp.value = mods.concat(k).join("+");
+      inp.dispatchEvent(new Event("input", { bubbles: true })); // conta come modifica (compare Annulla)
+      inp.blur();
+    });
+  });
   function markDirty(v) { setDirty = !!v; document.querySelector(".set-f").classList.toggle("dirty", setDirty); }
   function closeSettings() {
     if (!$("settings").classList.contains("show")) return;
@@ -2937,6 +3054,10 @@ label input[type=file]{display:block;margin-top:6px;font-size:12px;color:var(--m
     if (!settings.island) settings.island = { mode: "top", x: null, y: null, screen: "", open: "hover", openDelay: 1000, closeDelay: 1500, follow: true, birthday: "", border: 6 };
     Iris.birthday = settings.island.birthday || "";
     mineIds = new Set(settings.islandSessions || []); pinIds = new Set(settings.pinnedLocal || []);
+    // la Dimensione salvata si applica subito: prima i calcoli la usavano ma la pagina restava a misura normale,
+    // e l'isola disegnata non coincideva più con quella che riceve i clic
+    if (![0.85, 1, 1.2].includes(zoom())) settings.island.zoom = 1;
+    applyZoom();
     await readScreen();
     renderTtsBtn();
     setState("idle");

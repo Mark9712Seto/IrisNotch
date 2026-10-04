@@ -1,6 +1,6 @@
 [package]
 name = "iris-volto"
-version = "0.1.5"
+version = "0.2.0"
 description = "Il volto di Iris: isola in cima allo schermo per parlare con Hermes"
 edition = "2021"
 license = "MIT"

@@ -289,7 +289,8 @@ fn pointer_info(window: WebviewWindow) -> Result<Value, String> {
     let c = window.cursor_position().map_err(|e| e.to_string())?;
     let m = window.monitor_from_point(c.x, c.y).map_err(|e| e.to_string())?;
     let screen = m.as_ref().map(mon_json).unwrap_or(Value::Null);
-    Ok(json!({ "px": c.x, "py": c.y, "screen": screen }))
+    // "down": tasto sinistro premuto (serve al trascinamento per sapere quando l'hai lasciata)
+    Ok(json!({ "px": c.x, "py": c.y, "screen": screen, "down": left_button_down() }))
 }
 
 /// la parte della finestra fuori dall'isola lascia passare i clic alle finestre sotto
@@ -301,18 +302,27 @@ fn set_click_through(window: WebviewWindow, ignore: bool) -> Result<(), String> 
 /// sposta e dimensiona la finestra in un colpo solo (su Windows con una sola SetWindowPos: con due chiamate
 /// separate per un attimo si vedeva la finestra nuova nel posto vecchio, cioè una "copia fantasma")
 fn move_window(window: &WebviewWindow, x: i32, y: i32, width: u32, height: u32) -> Result<(), String> {
+    move_window_ex(window, x, y, width, height, false)
+}
+
+/// con `keep_size` sposta soltanto: durante il trascinamento la grandezza non cambia, e così la pagina
+/// (WebView2) non riceve a ogni passo un ridimensionamento da rifare
+fn move_window_ex(window: &WebviewWindow, x: i32, y: i32, width: u32, height: u32, keep_size: bool) -> Result<(), String> {
     #[cfg(windows)]
     {
-        use windows_sys::Win32::UI::WindowsAndMessaging::{SetWindowPos, SWP_NOACTIVATE, SWP_NOZORDER};
+        use windows_sys::Win32::UI::WindowsAndMessaging::{SetWindowPos, SWP_NOACTIVATE, SWP_NOSIZE, SWP_NOZORDER};
         let h = window.hwnd().map_err(|e| e.to_string())?;
-        let ok = unsafe { SetWindowPos(h.0 as _, std::ptr::null_mut(), x, y, width.max(1) as i32, height.max(1) as i32, SWP_NOZORDER | SWP_NOACTIVATE) };
+        let flags = SWP_NOZORDER | SWP_NOACTIVATE | if keep_size { SWP_NOSIZE } else { 0 };
+        let ok = unsafe { SetWindowPos(h.0 as _, std::ptr::null_mut(), x, y, width.max(1) as i32, height.max(1) as i32, flags) };
         if ok == 0 {
             return Err("SetWindowPos non riuscita".into());
         }
     }
     #[cfg(not(windows))]
     {
-        window.set_size(tauri::PhysicalSize::new(width.max(1), height.max(1))).map_err(|e| e.to_string())?;
+        if !keep_size {
+            window.set_size(tauri::PhysicalSize::new(width.max(1), height.max(1))).map_err(|e| e.to_string())?;
+        }
         window.set_position(PhysicalPosition::new(x, y)).map_err(|e| e.to_string())?;
     }
     Ok(())
@@ -364,7 +374,7 @@ fn drag_begin(window: WebviewWindow, off_x: f64, off_y: f64, width: f64, height:
                 let sc = m.as_ref().map(|m| m.scale_factor()).unwrap_or(1.0);
                 let r = ((c.x - off_x * sc).round() as i32, (c.y - off_y * sc).round() as i32, (width * sc).round() as u32, (height * sc).round() as u32);
                 if r != last {
-                    let _ = move_window(&window, r.0, r.1, r.2, r.3);
+                    let _ = move_window_ex(&window, r.0, r.1, r.2, r.3, (r.2, r.3) == (last.2, last.3));
                     last = r;
                     if last_emit.elapsed().as_millis() >= 30 {
                         last_emit = std::time::Instant::now();

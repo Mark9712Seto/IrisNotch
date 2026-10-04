@@ -81,7 +81,7 @@ Motori:
   - **Occhi che seguono** il mouse, che si può spegnere;
   - **Rimettila al centro**.
 - Impostazioni → **Generale**: il tuo **compleanno** (giorno e mese: quel giorno ci sono i coriandoli), **Avvia con Windows**, la **cornice nera** intorno agli occhi (0-16 px) e la **Dimensione** di tutta l'app (Piccola, Normale, Grande: ingrandisce isola, occhi, chat e impostazioni insieme).
-- **Puntina** accesa e isola aperta: prendendola dagli occhi si sposta tutta la finestra aperta, senza richiuderla.
+- **Puntina** accesa e isola aperta: prendendola dagli occhi si sposta tutta la finestra aperta, senza richiuderla. Se la lasci oltre un bordo o sopra la barra delle applicazioni rientra con una piccola molla; altrimenti resta esattamente dove l'hai lasciata.
 - Impostazioni → **Debug e prove**: modalità debug (log dettagliato), **Mostra l'area** (colora dove giocano gli occhi), ultimi errori e cartella dei log.
 - Ogni opzione ha un **?**: passandoci sopra col mouse spiega a cosa serve.
 - **Le modifiche valgono solo con Salva.** Appena cambi qualcosa compare **Annulla** accanto a Salva, e l'isola non si richiude da sola finché non scegli. Annulla, la **freccia indietro**, `Esc` o di nuovo l'**icona delle impostazioni** scartano le modifiche e chiudono.
@@ -131,7 +131,7 @@ Il titolo in alto apre il menu:
 
 ## Problemi noti
 
-- **Trascinamento:** dalla 0.1.2 la finestra la muove il programma, per togliere le scie quando la bolla si trascina veloce o tra due schermi. Se vedi ancora artefatti, segnalalo aprendo una *issue* su GitHub, con una foto.
+- **Trascinamento:** dalla 0.2.0 la finestra non si muove più mentre trascini (si sposta solo l'isola dentro la pagina): niente scie, sparizioni o fantasmi. Se vedi ancora artefatti, segnalalo aprendo una *issue* su GitHub, con un video.
 - **Trascrizione locale:** finora provata poco con un modello vero. Se non va, guarda **Debug e prove → Ultimi errori**.
-- **Scorciatoie:** si scrivono a mano nelle impostazioni (per esempio `Ctrl+Shift+K`). Se una scorciatoia è già usata da un altro programma, Windows non la assegna.
+- **Scorciatoie:** nelle impostazioni clicchi nel campo e premi la combinazione (per esempio `Ctrl+Shift+K`): si scrive da sola. Serve almeno un tasto tra Ctrl, Alt, Shift e Win, oppure un tasto F1-F24; Esc annulla. Se una scorciatoia è già usata da un altro programma, Windows non la assegna.
 - **Se qualcosa non va:** accendi la **modalità debug**, rifai la cosa e apri una *issue* su GitHub allegando **Ultimi errori** (il log non contiene mai le chiavi).

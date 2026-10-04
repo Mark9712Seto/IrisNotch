@@ -289,3 +289,7 @@ label input[type=file]{display:block;margin-top:6px;font-size:12px;color:var(--m
 .set-f.dirty .undo{display:inline-flex}
 .set-f.dirty #sSave{box-shadow:0 0 0 2px rgba(124,196,255,.35)}
 .set-f #sSave{flex:1}
+
+/* campi delle scorciatoie: si registrano premendo i tasti */
+input.keycap{cursor:pointer;font-family:ui-monospace,Consolas,monospace;caret-color:transparent}
+input.keycap.rec{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 30%,transparent);color:var(--accent)}
