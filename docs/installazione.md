@@ -1,11 +1,11 @@
-# Installare e usare Iris Notch (versione 0.1.x)
+# Installare e usare Iris Notch
 
 *[Read in English](install.md)*
 
 ## 1. Scaricare il programma
 
 1. Apri la pagina delle **Release** del repository e scegli l'ultima versione.
-2. Scarica `Iris Notch_0.1.x_x64-setup.exe` (il numero è la versione: in fondo alle impostazioni vedi quale hai installato) e aprilo. Installa solo per il tuo utente, non chiede i permessi di amministratore.
+2. Scarica `Iris.Notch_<versione>_x64-setup.exe` (il numero è la versione: in fondo alle impostazioni vedi quale hai installato) e aprilo. Installa solo per il tuo utente, non chiede i permessi di amministratore.
 3. Per provare una build più nuova di una Release: **Actions** → l'ultima esecuzione verde di **Build** → in fondo, sotto **Artifacts**, **Iris-Notch-Windows** (uno zip con l'installer e `iris-volto.exe`, il programma da solo senza installazione).
 
 > ⚠️ **Windows SmartScreen** mostrerà "Windows ha protetto il PC", perché il programma non è firmato. Clicca **Ulteriori informazioni → Esegui comunque**. Capita a tutti i programmi non firmati; firmarlo costa un certificato a pagamento.

@@ -26,6 +26,15 @@
   const icon = (n) => `<i data-i="${n}"><svg viewBox="0 0 24 24">${ICONS[n]}</svg></i>`;
   function paintIcons(root) { root.querySelectorAll("i[data-i]").forEach((el) => { if (!el.firstChild) el.innerHTML = `<svg viewBox="0 0 24 24">${ICONS[el.dataset.i]}</svg>`; }); }
   paintIcons(document);
+  /* Menu a tendina delle impostazioni con la stessa freccina di "Altre sessioni": a destra da chiusi, verso il basso aperti */
+  document.querySelectorAll("#settings select").forEach((s) => {
+    const w = document.createElement("span"); w.className = "sel";
+    s.parentNode.insertBefore(w, s); w.appendChild(s); w.insertAdjacentHTML("beforeend", icon("right"));
+    w.lastChild.classList.add("chev");
+    s.addEventListener("mousedown", () => w.classList.toggle("open"));
+    s.addEventListener("keydown", (e) => { if (e.key === " " || e.key === "Enter" || (e.altKey && e.key === "ArrowDown")) w.classList.add("open"); if (e.key === "Escape" || e.key === "Tab") w.classList.remove("open"); });
+    ["change", "blur"].forEach((ev) => s.addEventListener(ev, () => w.classList.remove("open")));
+  });
 
   /* ---------- stato ---------- */
   const isl = $("island");
@@ -627,7 +636,7 @@
       else if (m.role === "assistant" && m.content) addMsg("assistant", m.content);
       else if (m.role === "tool" && m.tool_name) addAct(m.tool_name, "", true);
     }
-    scrollDown();
+    foldActs(); scrollDown();
   }
 
   /* ---------- chat ---------- */
@@ -657,8 +666,36 @@
     const el = document.createElement("div");
     el.className = "act" + (done ? " done" : "");
     el.innerHTML = `${icon("tool")}<span>${esc(toolName(tool))}${preview ? " · " + esc(String(preview).slice(0, 60)) : ""}</span>`;
-    $("chat").appendChild(el); scrollDown();
+    $("chat").appendChild(el); foldActs(); scrollDown();
     return el;
+  }
+  /* Azioni una dopo l'altra: se sono più di 3 si vedono le ultime 3 (la più vecchia un po' sbiadita) e le altre
+     stanno in un gruppo chiuso, che si apre con la freccina come "Altre sessioni". */
+  function foldActs() {
+    const chat = $("chat"), kids = [...chat.children], runs = [];
+    let cur = null;
+    for (const k of kids) {
+      if (k.classList.contains("act") || k.classList.contains("act-fold")) { if (!cur) runs.push((cur = [])); cur.push(k); }
+      else cur = null;
+    }
+    for (const r of runs) {
+      let open = false; const acts = [];
+      for (const k of r) {
+        if (k.classList.contains("act-fold")) { open = k.classList.contains("open"); acts.push(...k.querySelectorAll(".act")); k.remove(); }
+        else acts.push(k);
+      }
+      acts.forEach((a) => a.classList.remove("faded"));
+      const anchor = acts[acts.length - 1].nextSibling;
+      acts.forEach((a) => chat.insertBefore(a, anchor)); // di nuovo in fila, nell'ordine giusto
+      if (acts.length <= 4) continue; // per nasconderne una sola non vale la pena
+      const hidden = acts.slice(0, acts.length - 3);
+      const fold = document.createElement("div"); fold.className = "act-fold" + (open ? " open" : "");
+      fold.innerHTML = `<button class="act-more"><span>${hidden.length === 1 ? "1 azione prima" : hidden.length + " azioni prima"}</span>${icon("right")}</button><div class="act-list"></div>`;
+      chat.insertBefore(fold, acts[acts.length - 3]);
+      hidden.forEach((a) => fold.lastChild.appendChild(a));
+      fold.firstChild.onclick = () => fold.classList.toggle("open");
+      acts[acts.length - 3].classList.add("faded");
+    }
   }
   function scrollDown() { const c = $("chat"); c.scrollTop = c.scrollHeight; }
 
@@ -709,7 +746,7 @@
     setState("thinking");
     try {
       const id = await B.sendMessage(session.id, text);
-      run = { id, el: null, text: "", tool: null };
+      run = { id, el: null, text: "", seg: 0, tool: null };
       setSendMode(true);
     } catch (e) { failRun(String(e)); }
   }
@@ -729,10 +766,13 @@
     if (ev.event !== "message.delta") dlog(`hermes: ${ev.event}${ev.tool ? " " + ev.tool : ""}${ev.error ? " — " + ev.error : ""}`);
     if (!run || ev.run_id !== run.id) return;
     switch (ev.event) {
-      case "message.delta":
-        if (!run.el) { run.el = addMsg("assistant", ""); run.el.querySelector(".txt").classList.add("caret"); if (settings.tts.chime) Iris.tts.chime("reply"); }
-        run.text += ev.delta || ""; run.el._text = run.text;
-        run.el.querySelector(".txt").innerHTML = md(run.text); scrollDown();
+      case "message.delta": {
+        // ogni pezzo di testo tra un'azione e l'altra va nella sua bolla, come quando si riapre la chat
+        if (!run.el && !(ev.delta || "").trim() && !run.text.slice(run.seg).trim()) { run.text += ev.delta || ""; break; }
+        if (!run.el) { run.el = addMsg("assistant", ""); run.el.querySelector(".txt").classList.add("caret"); if (settings.tts.chime && !run.chimed) { Iris.tts.chime("reply"); run.chimed = true; } }
+        run.text += ev.delta || "";
+        const part = run.text.slice(run.seg).trim(); run.el._text = part;
+        run.el.querySelector(".txt").innerHTML = md(part); scrollDown();
         // risposte a voce: si comincia a leggere appena c'è una frase completa
         if (settings.tts.auto) {
           if (!run.speech) { const el = run.el; speakingUI(el, true); run.speech = Iris.tts.stream(settings.tts, el.dataset.id, () => speakingUI(el, false)); }
@@ -740,7 +780,9 @@
         }
         if (isl.dataset.state !== "replying") setState("replying");
         break;
+      }
       case "tool.started":
+        closeSegment();
         run.tool = addAct(ev.tool, ev.preview); setState("tool", "Uso: " + toolName(ev.tool)); break;
       case "tool.completed":
         if (run.tool) { run.tool.classList.add(ev.error ? "err" : "done"); run.tool = null; }
@@ -752,11 +794,20 @@
       case "run.cancelled": endRun(); setState("idle"); break;
     }
   });
+  // un'azione chiude la bolla di testo in corso: il testo che arriva dopo ne apre una nuova sotto l'azione
+  function closeSegment() {
+    if (run.el) { run.el.querySelector(".txt").classList.remove("caret"); if (!run.el._text) run.el.remove(); }
+    run.el = null; run.seg = run.text.length;
+  }
   function finishRun(output) {
-    if (!run.el && output) { run.el = addMsg("assistant", output); if (settings.tts.chime) Iris.tts.chime("reply"); }
-    if (run.el) { const t = output || run.text; run.el._text = t; run.el.querySelector(".txt").innerHTML = md(t); run.el.querySelector(".txt").classList.remove("caret"); }
-    const el = run.el, speech = run.speech; endRun(); setState("done");
-    if (speech) speech.end(el._text);
+    const streamed = run.text.trim().length > 0;
+    if (!streamed && output) { run.el = addMsg("assistant", output); if (settings.tts.chime) Iris.tts.chime("reply"); }
+    else if (run.el && !run.text.slice(run.seg).trim()) { run.el.remove(); run.el = null; }
+    // se tutto è arrivato in un pezzo solo, la versione finale di Hermes sostituisce quella scritta man mano
+    if (run.el && run.seg === 0 && output) { run.el._text = output; run.el.querySelector(".txt").innerHTML = md(output); }
+    if (run.el) run.el.querySelector(".txt").classList.remove("caret");
+    const el = run.el, speech = run.speech, full = streamed ? run.text : output || ""; endRun(); setState("done");
+    if (speech) speech.end(full);
     else if (el && settings.tts.auto) speakEl(el);
     clearTimeout(doneTimer); doneTimer = setTimeout(() => { if (isl.dataset.state === "done") (speaking ? setState("replying", "Parlo…") : setState("idle")); }, 3000);
     scrollDown();

@@ -2,6 +2,12 @@
 
 *Italiano più sotto ↓*
 
+## v0.2.1 — 2026-10-04
+
+- **Clearer live replies:** while Iris works, each piece of text gets its own bubble with the actions in between, the same as when you reopen the chat (before, the text piled up in one bubble with gaps and the actions in a wall below).
+- **Long runs of actions are folded:** you see the last 3 (the oldest one faded) and the earlier ones sit behind "N azioni prima", which opens with the arrow.
+- **Same arrow everywhere:** the drop-down menus and "Informazioni" in the settings use the arrow of "Altre sessioni" (right when closed, down when open).
+
 ## v0.2.0 — 2026-10-04
 
 The "it finally drags properly" release.
@@ -19,6 +25,12 @@ First public release: the notch and the bubble, chat and sessions with Hermes, a
 ---
 
 ## Italiano
+
+### v0.2.1 — 04/10/2026
+
+- **Risposte dal vivo più chiare:** mentre Iris lavora, ogni pezzo di testo va nella sua bolla con le azioni in mezzo, come quando riapri la chat (prima il testo si accumulava in una bolla con dei buchi e le azioni facevano un muro sotto).
+- **Tante azioni di fila si raggruppano:** si vedono le ultime 3 (la più vecchia sbiadita), le altre stanno dietro "N azioni prima" e si aprono con la freccina.
+- **Stessa freccina ovunque:** i menu a tendina e "Informazioni" nelle impostazioni usano la freccina di "Altre sessioni" (a destra da chiusi, verso il basso aperti).
 
 ### v0.2.0 — 04/10/2026
 

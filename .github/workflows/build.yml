@@ -128,7 +128,10 @@ jobs:
             if [ "${{ github.event.repository.visibility }}" = "public" ]; then
               echo "- Built by GitHub Actions from this repository, with a signed build provenance attestation: \`gh attestation verify \"$(basename "$EXE")\" --repo ${{ github.repository }}\`"
             fi
-            echo "- VirusTotal: https://www.virustotal.com/gui/file/$SHA"
+            # il link solo se il file è stato davvero caricato su VirusTotal (altrimenti la pagina è vuota)
+            if [ -n "$VT_ANALYSIS" ]; then
+              echo "- VirusTotal: https://www.virustotal.com/gui/file/$SHA"
+            fi
             echo
             if [ -f ../CHANGELOG.md ]; then
               # la sezione di questa versione dal CHANGELOG (inglese e italiano)
@@ -138,3 +141,29 @@ jobs:
           } > notes.md
           gh release create "$V" "$EXE" --target "$GITHUB_SHA" --title "Iris Notch $V" --notes-file notes.md $PRE || \
           gh release upload "$V" "$EXE" --clobber
+
+  # winget: propone a Microsoft la scheda della nuova versione (winget install VarietyProject.IrisNotch).
+  # Serve: repo pubblico, una prima versione già accettata su microsoft/winget-pkgs, un fork di winget-pkgs
+  # sullo stesso account e il segreto WINGET_TOKEN (token classico con public_repo e workflow).
+  winget:
+    needs: windows
+    if: github.event_name == 'workflow_dispatch' && inputs.release && github.event.repository.visibility == 'public'
+    runs-on: windows-latest
+    env:
+      WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
+    steps:
+      - name: Versione
+        id: v
+        if: env.WINGET_TOKEN != ''
+        shell: bash
+        run: |
+          V=$(curl -fsSL "https://raw.githubusercontent.com/${{ github.repository }}/$GITHUB_SHA/app/src-tauri/tauri.conf.json" | node -p "JSON.parse(require('fs').readFileSync(0)).version")
+          echo "tag=v$V" >> "$GITHUB_OUTPUT"
+      - name: Proposta a winget
+        if: env.WINGET_TOKEN != ''
+        uses: vedantmgoyal9/winget-releaser@main
+        with:
+          identifier: VarietyProject.IrisNotch
+          release-tag: ${{ steps.v.outputs.tag }}
+          installers-regex: '\.exe$'
+          token: ${{ secrets.WINGET_TOKEN }}

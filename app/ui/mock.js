@@ -62,7 +62,14 @@
     if (/meteo|tempo|piove/.test(t))
       return { tools: [["web_search", "meteo Roma domani"]], reply: "Domani a Roma: sereno al mattino, qualche nuvola nel pomeriggio, massima 22 °C. Niente pioggia prevista." };
     if (/clima|condizionatore|temperatura/.test(t))
-      return { tools: [["homeassistant", "climate.set_temperature(24)"]], reply: "Ho impostato il condizionatore della camera a 24 °C. In camera adesso ci sono 26,5 °C." };
+      // come una risposta vera con più passaggi: testo, azione, testo, azione…
+      return { steps: [
+        { say: "Certo, do un'occhiata ai dispositivi del clima." }, { tool: ["ha_list_entities", "climate"] },
+        { say: "C'è il condizionatore della camera. Lo accendo a 24 gradi." }, { tool: ["ha_call_service", "climate.set_temperature"] },
+        { say: "Controllo che abbia preso il comando." }, { tool: ["ha_get_state", "climate.camera"] }, { tool: ["ha_get_state", "climate.camera"] },
+        { tool: ["ha_list_entities", "climate"] }, { tool: ["ha_call_service", "climate.turn_on"] },
+        { say: "Fatto: condizionatore della camera acceso, 24 °C, modalità freddo. In camera adesso ci sono 26,5 °C." },
+      ] };
     return { tools: [["memory", "cerca nel contesto"]], reply: "Certo! Questa è una risposta di prova della demo: nell'app vera qui arriva quello che risponde Iris da Hermes, parola per parola mentre lo scrive." };
   }
 
@@ -70,6 +77,16 @@
     const sc = script(text);
     const ev = (event, f) => emit("hermes-event", Object.assign({ event, run_id: runId, timestamp: now() }, f || {}));
     await sleep(900);
+    if (sc.steps) {
+      let last = "";
+      for (const st of sc.steps) {
+        if (runs[runId].stopped) return ev("run.cancelled", {});
+        if (st.tool) { ev("tool.started", { tool: st.tool[0], preview: st.tool[1] }); await sleep(700); ev("tool.completed", { tool: st.tool[0], duration: 0.7, error: false }); await sleep(250); continue; }
+        last = st.say;
+        for (const word of ("\n\n" + st.say).split(/(\s+)/)) { ev("message.delta", { delta: word }); await sleep(word.trim() ? 35 : 0); }
+      }
+      return finish(ev, sessionId, runId, last);
+    }
     for (const [tool, preview] of sc.tools) {
       ev("tool.started", { tool, preview });
       await sleep(1400);
@@ -172,7 +189,7 @@
     openLogs: async () => {},
     checkUpdate: async () => ({ available: false }),
     openLink: async (url) => window.open(url, "_blank"),
-    appInfo: async () => ({ version: "0.2.0", repo: "https://github.com/Mark9712Seto/IrisVolto" }),
+    appInfo: async () => ({ version: "0.2.1", repo: "https://github.com/Mark9712Seto/IrisVolto" }),
     localHealth: async () => ({ running: true, ultima_frase: { calcolo_s: 0.31, audio_s: 3.1 } }),
     saveIsland: async () => {},
     // solo demo: simula la scorciatoia "premi e parla"
