@@ -1,0 +1,42 @@
+name: VirusTotal
+
+# Manda a VirusTotal l'installer di una Release già pubblicata e aggiunge il link alle sue note.
+# Serve il segreto VT_API_KEY (o VIRUSTOTAL): account gratuito su virustotal.com → API key.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release da controllare (es. v0.2.1)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      VT_API_KEY: ${{ secrets.VT_API_KEY || secrets.VIRUSTOTAL }}
+      TAG: ${{ inputs.tag }}
+    steps:
+      - name: Scarica l'installer
+        run: |
+          [ -n "$VT_API_KEY" ] || { echo "::error::manca il segreto VT_API_KEY (o VIRUSTOTAL)"; exit 1; }
+          mkdir dl && gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern '*.exe' --dir dl
+          ls -l dl
+      - name: VirusTotal
+        uses: crazy-max/ghaction-virustotal@v4
+        with:
+          vt_api_key: ${{ env.VT_API_KEY }}
+          files: dl/*.exe
+      - name: Link nelle note della Release
+        run: |
+          SHA=$(sha256sum dl/*.exe | head -1 | cut -d' ' -f1)
+          LINK="https://www.virustotal.com/gui/file/$SHA"
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json body -q .body > notes.md
+          if grep -q "virustotal.com/gui/file/$SHA" notes.md; then echo "link già presente"; exit 0; fi
+          # subito dopo la riga dell'attestazione (o dello SHA-256), nella sezione "Check the file"
+          awk -v l="- VirusTotal: $LINK" '{print} /^- Built by GitHub Actions/ && !d {print l; d=1} END {if (!d) print "\n" l}' notes.md > new.md
+          gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --notes-file new.md
+          echo "$LINK"
