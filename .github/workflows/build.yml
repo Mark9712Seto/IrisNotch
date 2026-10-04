@@ -15,6 +15,8 @@ on:
 # L'app controlla solo le Release (non i singoli commit) e avvisa che c'è una versione nuova.
 permissions:
   contents: write
+  id-token: write      # attestazione di provenienza (repo pubblico)
+  attestations: write
 
 jobs:
   # test del lato Rust su Linux, compresa la prova completa contro il finto Hermes
@@ -50,6 +52,7 @@ jobs:
       # whisper.cpp + Vulkan crea percorsi molto profondi: con la cartella di default si supera il limite
       # di 260 caratteri di Windows (errore FTK1011). Una cartella dal nome corto lo evita.
       CARGO_TARGET_DIR: C:\t
+      VT_API_KEY: ${{ secrets.VT_API_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -84,12 +87,51 @@ jobs:
         with:
           files: C:/t/release/bundle/nsis/*.exe
           generate_release_notes: true
+      # attestazione di GitHub: prova che l'installer è stato compilato da questo workflow, da questo codice
+      # (si verifica con: gh attestation verify <file.exe> --repo <proprietario/repo>). Solo per i repo pubblici.
+      - name: Attestazione di provenienza
+        if: github.event.repository.visibility == 'public'
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: C:/t/release/bundle/nsis/*.exe
+      # VirusTotal, se nel repo c'è il segreto VT_API_KEY (account gratuito su virustotal.com → API key)
+      - name: VirusTotal
+        id: vt
+        if: env.VT_API_KEY != ''
+        continue-on-error: true
+        uses: crazy-max/ghaction-virustotal@v4
+        with:
+          vt_api_key: ${{ secrets.VT_API_KEY }}
+          files: C:/t/release/bundle/nsis/*.exe
       - name: Release (avviata a mano)
         if: github.event_name == 'workflow_dispatch' && inputs.release
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          VT_ANALYSIS: ${{ steps.vt.outputs.analysis }}
         run: |
           V="v$(node -p "require('./src-tauri/tauri.conf.json').version")"
-          gh release create "$V" C:/t/release/bundle/nsis/*.exe --target "$GITHUB_SHA" --title "Iris Notch $V" --generate-notes || \
-          gh release upload "$V" C:/t/release/bundle/nsis/*.exe --clobber
+          EXE=$(ls C:/t/release/bundle/nsis/*.exe | head -1)
+          SHA=$(sha256sum "$EXE" | cut -d' ' -f1)
+          PRE=""; case "$V" in v0.*) PRE="--prerelease";; esac
+          {
+            echo "## Iris Notch $V"
+            echo
+            echo "Early version: some bugs are still there. / Versione iniziale: qualche bug c'è ancora."
+            echo
+            echo "**Install / Installare:** download \`$(basename "$EXE")\` below and run it. SmartScreen will warn you because the app isn't code-signed yet: *More info → Run anyway*. Guide: [English](https://github.com/${{ github.repository }}/blob/main/docs/install.md) · [Italiano](https://github.com/${{ github.repository }}/blob/main/docs/installazione.md)."
+            echo
+            echo "### Check the file / Controllare il file"
+            echo
+            echo "- SHA-256: \`$SHA\`"
+            echo "  (PowerShell: \`Get-FileHash \".\\$(basename "$EXE")\"\`)"
+            if [ "${{ github.event.repository.visibility }}" = "public" ]; then
+              echo "- Built by GitHub Actions from this repository, with a signed build provenance attestation: \`gh attestation verify \"$(basename "$EXE")\" --repo ${{ github.repository }}\`"
+            fi
+            echo "- VirusTotal: https://www.virustotal.com/gui/file/$SHA"
+            echo
+            echo "### Changes / Novità"
+            echo
+          } > notes.md
+          gh release create "$V" "$EXE" --target "$GITHUB_SHA" --title "Iris Notch $V" --notes-file notes.md --generate-notes $PRE || \
+          gh release upload "$V" "$EXE" --clobber
