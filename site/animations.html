@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Iris Notch Animations</title>
+<meta name="description" content="Every expression and easter egg of Iris Notch, live, drawn by the same engine as the app.">
+<meta name="theme-color" content="#07080c">
+<link rel="icon" href="images/logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+<style>
+.jump{position:sticky;top:60px;z-index:10;background:color-mix(in srgb,var(--ink) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:10px 0}
+.jump .wrap{display:flex;flex-wrap:wrap;gap:6px}
+.jump a{font:500 12.5px var(--mono);color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 11px}
+.jump a:hover{color:var(--fg);border-color:var(--line2);text-decoration:none}
+section{padding:56px 0;scroll-margin-top:110px}
+.sh{margin-bottom:24px}
+.page-h{padding-top:56px;padding-bottom:30px;display:flex;flex-direction:column;gap:12px}
+.page-h h1{font-size:clamp(32px,5.5vw,54px);line-height:1.05}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="./"><img src="images/logo.svg" alt="">Iris Notch</a>
+    <nav>
+      <a href="./#features"><span lang="en">Features</span><span lang="it">Funzioni</span></a>
+      <a href="animations.html"><span lang="en">Animations</span><span lang="it">Animazioni</span></a>
+      <a href="demo.html">Demo</a>
+      <a href="./#install"><span lang="en">Install</span><span lang="it">Installa</span></a>
+    </nav>
+    <div class="lang" role="group" aria-label="Language"><button data-l="en">EN</button><button data-l="it">IT</button></div>
+  </div>
+</header>
+
+<div class="wrap page-h">
+  <span class="eyebrow"><span lang="en">Animations</span><span lang="it">Animazioni</span></span>
+  <h1><span lang="en">Every face it can make</span><span lang="it">Tutte le facce che sa fare</span></h1>
+  <p class="lede"><span lang="en">All live, drawn by the same engine as the app. Click any notch to replay it. The states follow your agent; the surprises arrive at random, every 5 to 40 minutes, or on their day.</span><span lang="it">Tutte vive, disegnate dallo stesso motore dell'app. Clicca una tacca per rivederla. Gli stati seguono il tuo agente; le sorprese arrivano a caso, ogni 5-40 minuti, o nel loro giorno.</span></p>
+</div>
+<div class="jump"><div class="wrap" id="jump"></div></div>
+<main id="root"></main>
+
+<footer>
+  <div class="wrap">
+    <a class="brand" href="./"><img src="images/logo.svg" alt="" style="width:28px">Iris Notch</a>
+    <span>© 2026 Variety Project</span>
+    <nav><a href="https://github.com/Mark9712Seto/IrisNotch">GitHub</a><a href="demo.html">Demo</a></nav>
+  </div>
+</footer>
+
+<script src="eyes.js"></script>
+<script src="site.js"></script>
+<script>
+(function () {
+  const root = document.getElementById("root"), jump = document.getElementById("jump");
+  const T = (en, it) => `<span lang="en">${en}</span><span lang="it">${it}</span>`;
+  function section(id, en, it, den, dit) {
+    const s = document.createElement("section"); s.id = id;
+    s.innerHTML = `<div class="wrap"><div class="sh"><h2>${T(en, it)}</h2><p>${T(den, dit)}</p></div><div class="eggs"></div></div>`;
+    root.appendChild(s);
+    const a = document.createElement("a"); a.href = "#" + id; a.innerHTML = T(en, it); jump.appendChild(a);
+    return s.querySelector(".eggs");
+  }
+  function card(grid, title, sub) {
+    const c = document.createElement("div"); c.className = "egg";
+    c.innerHTML = `<div></div><b>${title}</b>${sub ? `<small>${sub}</small>` : ""}`;
+    grid.appendChild(c);
+    const el = c.firstChild;
+    return { el, eyes: Site.notch(el, { idleLife: false, autoEggs: false }) };
+  }
+
+  // stati, con tutte le varianti
+  const ST = [
+    ["listening", "Listening", "Ascolta"], ["thinking", "Thinking", "Pensa"], ["tool", "Using a tool", "Usa uno strumento"],
+    ["replying", "Answering", "Risponde"], ["done", "Done", "Fatto"], ["approval", "Needs approval", "Via libera"],
+    ["error", "Error", "Errore"], ["sleep", "Asleep", "Dorme"],
+  ];
+  const sg = section("states", "Agent states", "Stati dell'agente", "Each state has a few variants; the app picks one at random every time.", "Ogni stato ha più varianti; l'app ne sceglie una a caso ogni volta.");
+  ST.forEach(([s, en, it]) => (Iris.VARIANTS[s] || [{}]).forEach((v, i) => {
+    const { el, eyes } = card(sg, T(en, it) + (Iris.VARIANTS[s].length > 1 ? ` <span style="color:var(--dim)">${i + 1}</span>` : ""), "");
+    if (eyes.setVariant) eyes.setVariant(s, i);
+    const start = () => { eyes.setState("idle"); setTimeout(() => eyes.setState(s), 60); };
+    start(); el.addEventListener("click", start);
+    if ((s === "done" || s === "error") && !Site.reduce) setInterval(start, 3200);
+    if (s === "listening") setInterval(() => eyes.setLevel && eyes.setLevel(0.3 + Math.abs(Math.sin(performance.now() / 200)) * 0.6), 70);
+  }));
+
+  const add = (grid, list) => list.forEach(([id, en, it, wen, wit], n) => {
+    if (!Iris.EGGS[id]) return;
+    const { el, eyes } = card(grid, T(en, it), wen ? T(wen, wit) : "");
+    Site.loopEgg(eyes, el, id, 300 + (n % 4) * 350);
+  });
+  const bored = ["when it's bored", "quando si annoia"];
+  add(section("surprises", "Everyday surprises", "Sorprese di tutti i giorni", "They show up at random, never the same twice in a row.", "Arrivano a caso, mai la stessa due volte di fila."), [
+    ["pong", "Pong", "Pong"], ["pacman", "Pac-Man", "Pac-Man"], ["dvd", "DVD screensaver", "Logo del DVD"], ["scanner", "Scanner", "Scanner"],
+    ["matrix", "Matrix", "Matrix"], ["music", "Music", "Musica"], ["disco", "Disco", "Disco"], ["mosca", "A fly", "Una mosca"],
+    ["nascondino", "Hide and seek", "Nascondino"], ["starnuto", "Sneeze", "Starnuto"], ["farfalla", "Butterfly", "Farfalla"], ["bolle", "Soap bubbles", "Bolle di sapone"],
+    ["stella", "Shooting star", "Stella cadente"], ["occhiali", "Sunglasses", "Occhiali da sole"], ["gattino", "Kitten", "Gattino"], ["lettura", "Reading", "Legge un libro"],
+    ["palloncino", "Balloon", "Palloncino"], ["cuori", "Hearts", "Cuori"],
+  ].map((x) => x.concat(bored)));
+  add(section("time", "Time of day", "L'ora del giorno", "When you open the island, once per part of the day.", "Quando apri l'isola, una volta per fascia."), [
+    ["occhiaie", "Deep night", "Notte fonda", "00:30 – 4:00", "00:30 – 4:00"], ["alba", "Very early", "Prestissimo", "4:00 – 6:30", "4:00 – 6:30"],
+    ["caffe", "Morning coffee", "Caffè del mattino", "6:30 – 9:30", "6:30 – 9:30"], ["stiracchiata", "Stretch", "Stiracchiata", "17:00 – 19:00", "17:00 – 19:00"],
+    ["sera", "Evening", "Sera", "21:00 – 00:30", "21:00 – 00:30"],
+  ]);
+  add(section("world", "Holidays around the world", "Feste nel mondo", "On their day, most surprises are the holiday's.", "Nel loro giorno, quasi tutte le sorprese sono quelle della festa."), [
+    ["lanterne", "Lunar New Year", "Capodanno cinese", "lunar calendar", "calendario lunare"], ["holi", "Holi", "Holi", "lunar calendar", "calendario lunare"],
+    ["pigreco", "Pi Day", "Pi Day", "March 14", "14 marzo"], ["trifoglio", "St. Patrick's Day", "San Patrizio", "March 17", "17 marzo"],
+    ["sakura", "Hanami", "Hanami", "Mar 25 – Apr 10", "25 marzo – 10 aprile"], ["terra", "Earth Day", "Giornata della Terra", "April 22", "22 aprile"],
+    ["spada", "Star Wars Day", "Star Wars Day", "May the 4th", "4 maggio"], ["usa", "Independence Day", "Indipendenza USA", "July 4", "4 luglio"],
+    ["francia", "Bastille Day", "Presa della Bastiglia", "July 14", "14 luglio"], ["birra", "Oktoberfest", "Oktoberfest", "late Sep – early Oct", "fine settembre – inizio ottobre"],
+    ["diwali", "Diwali", "Diwali", "lunar calendar", "calendario lunare"], ["muertos", "Día de los Muertos", "Día de los Muertos", "Nov 1–2", "1–2 novembre"],
+    ["tacchino", "Thanksgiving", "Thanksgiving", "4th Thursday of November", "quarto giovedì di novembre"],
+  ]);
+  add(section("calendar", "Seasons and Italian holidays", "Stagioni e feste italiane", "From New Year's fireworks to snow at Christmas, and confetti on your birthday.", "Dai fuochi di Capodanno alla neve a Natale, e i coriandoli il giorno del tuo compleanno."), [
+    ["fuochi", "New Year", "Capodanno", "Dec 31 – Jan 1", "31 dicembre – 1 gennaio"], ["befana", "Epiphany", "Befana", "January 6", "6 gennaio"],
+    ["innamorato", "Valentine's Day", "San Valentino", "February 14", "14 febbraio"], ["maschera", "Carnival", "Carnevale", "before Lent", "prima della Quaresima"],
+    ["petali", "Spring", "Primavera", "Mar 20 – Apr 20", "20 marzo – 20 aprile"], ["pesce", "April Fools'", "Pesce d'aprile", "April 1", "1 aprile"],
+    ["uovo", "Easter", "Pasqua", "Easter and Easter Monday", "Pasqua e Pasquetta"], ["frecce", "Italian national days", "Liberazione e Repubblica", "April 25, June 2", "25 aprile, 2 giugno"],
+    ["sole", "Summer", "Estate", "summer", "estate"], ["foglie", "Autumn", "Autunno", "Sep 22 – Nov 15", "22 settembre – 15 novembre"],
+    ["fantasma", "Halloween", "Halloween", "Oct 25 – Nov 2", "25 ottobre – 2 novembre"], ["zucca", "Pumpkin", "Zucca", "Halloween", "Halloween"],
+    ["neve", "Snow", "Neve", "Dec 8 – Jan 6", "8 dicembre – 6 gennaio"], ["regalo", "Christmas", "Natale", "Dec 24–26", "24–26 dicembre"],
+    ["torta", "Your birthday", "Il tuo compleanno", "the day you set", "il giorno che imposti"], ["coriandoli", "Confetti", "Coriandoli", "your birthday", "il tuo compleanno"],
+    ["luna", "Full moon", "Luna piena", "full-moon nights", "notti di luna piena"], ["gattonero", "Friday the 17th", "Venerdì 17", "unlucky in Italy", "in Italia porta sfortuna"],
+  ]);
+  add(section("reactions", "Reactions", "Reazioni", "Poke the eyes three times, shake the mouse, or leave the PC alone for a while.", "Tocca gli occhi tre volte, scuoti il mouse, o lascia il PC fermo per un po'."), [
+    ["solletico", "Tickled", "Solletico", "poke it 3 times", "toccalo 3 volte"], ["giramento", "Dizzy", "Giramento di testa", "mouse flying around", "mouse velocissimo"],
+    ["pisolino", "Nap", "Pisolino", "12 minutes idle", "12 minuti fermo"],
+  ]);
+})();
+</script>
+</body>
+</html>

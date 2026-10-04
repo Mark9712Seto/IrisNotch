@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Due occhi</title>
+<style>
+:root{--bg:#f4f2fa;--card:#fff;--text:#1c1830;--muted:#6b6585;--line:#e3dff0;--accent:#7cc4ff}
+@media (prefers-color-scheme: dark){:root{--bg:#0f0d17;--card:#1a1726;--text:#ece9f7;--muted:#9a94b5;--line:#2c2840}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;padding:24px 16px 60px}
+main{max-width:980px;margin:0 auto}
+h1{font-size:24px;margin:0 0 4px}
+h2{font-size:14px;margin:14px 0 4px;color:var(--muted);font-weight:600}
+p.sub{color:var(--muted);margin:0 0 12px}
+.states{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0}
+.states button{border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:999px;padding:6px 12px;font:inherit;font-size:13px;cursor:pointer}
+.states button.on{background:var(--accent);border-color:var(--accent);color:#06121f}
+.row{display:flex;gap:16px;align-items:center;flex-wrap:wrap;color:var(--muted);font-size:13px;margin:10px 0 12px}
+.stage{border-radius:22px;background:radial-gradient(ellipse at 50% 30%,#1a2033 0%,#0b0d16 65%,#06070c 100%);display:flex;justify-content:center;padding:10px 10px 18px}
+.big{width:min(560px,90vw);height:min(420px,68vw)}
+svg{display:block;width:100%;height:100%}
+.isles{display:flex;flex-direction:column;align-items:center;gap:6px;background:#14121c;border-radius:18px;padding:0 12px 18px;margin-top:20px}
+.island{width:320px;max-width:100%;height:46px;background:#000;border-radius:0 0 24px 24px;display:flex;align-items:center;gap:8px;padding:0 16px 0 10px;color:#eee}
+.island .mini{width:64px;height:40px;flex:none}
+.island .status{flex:1;font-size:13px}
+.isles small{color:#8d88a6;font-size:12px}
+.log{font-size:12px;color:var(--muted);min-height:18px;margin-top:6px}
+label{cursor:pointer}
+.note{color:var(--muted);font-size:13px;margin-top:14px}
+</style>
+</head>
+<body>
+<main>
+  <h1>Due occhi</h1>
+  <p class="sub">Il volto di Iris è fatto solo di due occhi. Le espressioni nascono da palpebre, sguardo e forma, e passano da una all'altra in modo fluido. Anche senza fare niente è vivo: sbatte le palpebre, si guarda intorno, ogni tanto sorride o sbadiglia.</p>
+  <h2>Stati di Iris</h2>
+  <div class="states" id="states"></div>
+  <h2>Espressioni extra</h2>
+  <div class="states" id="extras"></div>
+  <div class="row"><label><input type="checkbox" id="demo"> demo automatica</label><label><input type="checkbox" id="followBox"> gli occhi seguono il mouse</label><label><input type="checkbox" id="idleLife" checked> piccoli gesti spontanei a riposo</label></div>
+  <div class="stage"><div class="big" id="A"></div></div>
+  <div class="log" id="log"></div>
+  <div class="isles">
+    <div class="island"><div class="mini" id="mA"></div><div class="status st"></div></div>
+    <small>Nell'isola gli occhi stanno direttamente nel nero; puntini e "zz" restano dentro la bolla</small>
+  </div>
+  <p class="note">Tutto è disegnato in SVG e mosso da JavaScript, quindi resta nitido a qualunque dimensione. È lo stesso motore che userà il programma vero. I colori sono di prova.</p>
+</main>
+<script>
+const STATES=[["idle","A riposo"],["listening","Ti ascolto…"],["thinking","Sto pensando…"],["tool","Uso: posta"],["replying","Rispondo…"],["approval","Mi serve il via libera"],["done","Fatto"],["error","Qualcosa è andato storto"],["sleep","Hermes non raggiungibile"]];
+const EXTRAS=[["hello","Saluto"],["wink","Occhiolino"],["love","Contenta"],["laugh","Ride"],["surprised","Sorpresa"],["curious","Curiosa"],["doubt","Dubbiosa"],["focus","Concentrata"],["shy","Imbarazzata"],["sleepy","Assonnata"],["scared","Spaventata"],["angry","Arrabbiata"],["sad","Triste"],["dizzy","Confusa"]];
+const COLOR={idle:"#7cc4ff",listening:"#38bdf8",thinking:"#a78bfa",tool:"#f59e0b",replying:"#5eead4",approval:"#fb7185",done:"#4ade80",error:"#f87171",sleep:"#64748b",
+  hello:"#7cc4ff",wink:"#7cc4ff",love:"#f9a8d4",laugh:"#7cc4ff",surprised:"#7cc4ff",curious:"#7cc4ff",doubt:"#7cc4ff",focus:"#7cc4ff",shy:"#f9a8d4",sleepy:"#94a3b8",scared:"#c4b5fd",angry:"#f87171",sad:"#93c5fd",dizzy:"#c4b5fd"};
+const LABEL=Object.fromEntries([...STATES,...EXTRAS]);
+const FACE="#000";
+
+/* ---------- disegno ---------- */
+// bolla: in grande è una pillola nera; nell'isola il nero è l'isola stessa
+// occhio = rettangolo arrotondato luminoso + palpebra sopra (inclinabile) + guancia sotto (curva), ritagliati sulla forma dell'occhio
+function build(el,id,island){
+  const eye=s=>`<clipPath id="${id}clip${s}"><rect data-r="clip${s}"/></clipPath>
+    <g clip-path="url(#${id}clip${s})">
+      <rect data-r="eye${s}" fill="currentColor"/>
+      <rect data-r="shine${s}" fill="#fff" opacity=".32"/>
+      <rect data-r="lid${s}" fill="${FACE}"/>
+      <ellipse data-r="cheek${s}" fill="${FACE}"/>
+    </g>`;
+  const vb=island?"22 38 76 44":"0 30 120 76";
+  el.innerHTML=`<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg" style="color:#7cc4ff;transition:color .35s">
+    <clipPath id="${id}bubble"><rect x="14" y="40" width="92" height="58" rx="29"/></clipPath>
+    <g data-r="body">
+      ${island?"":`<rect data-r="glow" x="11.5" y="37.5" width="97" height="63" rx="31.5" fill="none" stroke="currentColor" stroke-width="2" opacity="0"/>
+      <rect x="14" y="40" width="92" height="58" rx="29" fill="${FACE}"/>
+      <rect x="14" y="40" width="92" height="58" rx="29" fill="none" stroke="#1d2230" stroke-width="1.2"/>`}
+      <g ${island?"":`clip-path="url(#${id}bubble)"`}>
+        ${eye("L")}${eye("R")}
+        <g data-r="dots" fill="currentColor" opacity="0"><circle cx="53" r="1.9"/><circle cx="60" r="1.9"/><circle cx="67" r="1.9"/></g>
+        <g data-r="zz" fill="#94a3b8" font-family="system-ui" font-weight="700" opacity="0"><text data-r="z1" font-size="9">z</text><text data-r="z2" font-size="6.5">z</text></g>
+        <g data-r="sweat" opacity="0"><path d="M0 -3 Q2.2 0 0 2 Q-2.2 0 0 -3Z" fill="#7dd3fc"/></g>
+      </g>
+    </g>
+  </svg>`;
+  const r={};el.querySelectorAll("[data-r]").forEach(n=>r[n.dataset.r]=n);
+  return {svg:el.querySelector("svg"),r,island,cur:null};
+}
+
+/* ---------- espressioni ---------- */
+// w,h · rr arrotondamento · dx,dy sguardo · lt palpebra (0 aperta, 1 chiusa) · tilt palpebra (+ verso il centro = arrabbiata, - = triste) · lb guancia (occhi felici) · sc scala · op luminosità
+const BASE={w:15,h:21,rr:6,dx:0,dy:0,lt:0,tilt:0,lb:0,sc:1,op:1};
+const E=o=>Object.assign({},BASE,o);
+const rnd=(a,b)=>a+Math.random()*(b-a);
+
+function target(st,t){
+  const s=t/1000,ts=t-stateAt;
+  let L=E({}),R=E({}),body={y:0,sx:1,sy:1,x:0,rot:0},dots=0,zz=0,glow=0,sweat=0;
+  body.y=Math.sin(s*1.7)*.8;                                  // respiro
+  switch(st){
+    case"idle":break;
+    case"listening":{const lvl=(Math.sin(s*9)*.5+.5)*(Math.sin(s*2.3)*.5+.5);L=E({h:23,w:16,dy:-1,sc:1+lvl*.08});R=E({h:23,w:16,dy:-1,sc:1+lvl*.08});
+      if(ts<350){const k=Math.sin(ts/350*Math.PI);L.sc+=k*.12;R.sc+=k*.12}break}   // entra in ascolto: si "drizza"
+    case"thinking":{const flick=Math.sin(s*.8)>.6?-4:4;L=E({h:17,dx:flick,dy:-4,lb:.12});R=E({h:19,dx:flick,dy:-4,lb:.12});dots=1;break}
+    case"tool":{const read=((s*.7)%1),dx=read<.85?-5+read/.85*10:5-(read-.85)/.15*10;L=E({w:17,h:13,dy:3,dx,lt:.22});R=E({w:17,h:13,dy:3,dx,lt:.22});break}
+    case"replying":{const syl=Math.abs(Math.sin(s*7.5))*Math.abs(Math.sin(s*2.1+1));L=E({h:19+syl*3.5,dy:-syl*1.5});R=E({h:19+syl*3.5,dy:-syl*1.5});body.y+=-syl*1.4;break}
+    case"approval":{const ph=(t%900)/900,hop=Math.max(0,Math.sin(ph*Math.PI*2))*(ph<.5?1:0);L=E({w:17,h:23,rr:8.5});R=E({w:17,h:23,rr:8.5});
+      body.y=-hop*5;body.sx=1+.03*(1-hop);body.sy=1-.03*(1-hop);glow=.35+.4*(Math.sin(s*7)*.5+.5);
+      if(ts<300){const k=Math.sin(ts/300*Math.PI);L.sc+=k*.25;R.sc+=k*.25}break}
+    case"done":{L=E({lb:.55,dy:-1});R=E({lb:.55,dy:-1});if(ts<900){const k=Math.abs(Math.sin(ts/900*Math.PI*2))*(1-ts/900);body.y-=k*7;body.sy=1+k*.05;body.sx=1-k*.03}break}
+    case"error":{L=E({h:4,w:16,rr:2});R=E({h:4,w:16,rr:2});if(ts<1300){const d=1-ts/1300;body.x=Math.sin(ts/35)*4*d}sweat=1;break}
+    case"sleep":{L=E({lt:.86,op:.5});R=E({lt:.86,op:.5});body.y=Math.sin(s*1)*1.6;body.sy=1+Math.sin(s*1)*.015;zz=1;
+      if(Math.sin(s*.31)>.97){L.lt=.7;}                         // ogni tanto "sogna" e socchiude un occhio
+      break}
+    case"hello":{const k=ts%2400;if(k<700){L=E({lb:.6});R=E({})}else{L=E({lb:.55});R=E({lb:.55})}body.y-=Math.abs(Math.sin(ts/220))*2*(k<1200?1:0);break}
+    case"wink":L=E({lb:.6,lt:.1});R=E({sc:1.05});body.rot=-3;break;
+    case"love":L=E({lb:.5,sc:1.05});R=E({lb:.5,sc:1.05});body.y-=Math.abs(Math.sin(s*4))*2;break;
+    case"laugh":{const k=Math.abs(Math.sin(s*9));L=E({lb:.6,lt:.05});R=E({lb:.6,lt:.05});body.y-=k*2.5;body.rot=Math.sin(s*4.5)*2;break}
+    case"surprised":L=E({w:18,h:26,rr:9});R=E({w:18,h:26,rr:9});if(ts<250){body.y-=Math.sin(ts/250*Math.PI)*5}break;
+    case"curious":L=E({h:16,lt:.15,dx:2});R=E({h:24,w:17,dx:2,dy:-1});body.rot=-6+Math.sin(s*1.3)*1.5;break;
+    case"doubt":L=E({lt:.05});R=E({lt:.32,tilt:-14,h:19});L.dx=R.dx=Math.sin(s*.9)*2.5;body.rot=3;break;
+    case"focus":L=E({lt:.3,lb:.18,h:18,w:16});R=E({lt:.3,lb:.18,h:18,w:16});break;
+    case"shy":L=E({dx:-5,dy:3,lb:.3,sc:.92});R=E({dx:-5,dy:3,lb:.3,sc:.92});body.rot=4;break;
+    case"sleepy":{const nod=Math.max(0,Math.sin(s*.9));L=E({lt:.5+nod*.25,op:.85});R=E({lt:.5+nod*.25,op:.85});body.y=nod*2;body.rot=nod*-3;break}
+    case"scared":{const sh=Math.sin(s*40)*.6;L=E({w:12,h:24,rr:6,sc:.85,dx:sh});R=E({w:12,h:24,rr:6,sc:.85,dx:sh});sweat=1;break}
+    case"angry":L=E({lt:.38,tilt:22,h:19});R=E({lt:.38,tilt:22,h:19});body.x=Math.sin(s*30)*.4;break;
+    case"sad":L=E({lt:.3,tilt:-18,dy:2,h:19});R=E({lt:.3,tilt:-18,dy:2,h:19});body.y+=1.5;break;
+    case"dizzy":{L=E({sc:.9,dx:Math.cos(s*6)*3,dy:Math.sin(s*6)*3});R=E({sc:.9,dx:-Math.cos(s*6)*3,dy:-Math.sin(s*6)*3});body.rot=Math.sin(s*3)*5;break}
+  }
+  return {L,R,body,dots,zz,glow,sweat};
+}
+
+/* ---------- vita a riposo: piccoli gesti spontanei ---------- */
+let gesture=null,nextGesture=4000;
+const GESTURES={
+  glance:{dur:1400,f:(k,T)=>{const d=k<.15?k/.15:k>.85?(1-k)/.15:1;for(const e of[T.L,T.R]){e.dx+=gesture.dir*5.5*d;e.dy+=gesture.dy*d}}},
+  smile:{dur:1500,f:(k,T)=>{const d=Math.sin(k*Math.PI);T.L.lb+=.5*d;T.R.lb+=.5*d}},
+  yawn:{dur:2600,f:(k,T)=>{const a=k<.45?Math.sin(k/.45*Math.PI/2):1-(k-.45)/.55;const d=Math.max(0,a);T.L.h+=6*d;T.R.h+=6*d;T.L.lt+=.55*d;T.R.lt+=.55*d;T.body.sy+=.03*d}},
+  squint:{dur:1200,f:(k,T)=>{const d=Math.sin(k*Math.PI);T.L.lt+=.35*d;T.R.lt+=.35*d;T.L.lb+=.15*d;T.R.lb+=.15*d}},
+  lookUser:{dur:1600,f:(k,T)=>{const d=Math.sin(k*Math.PI);T.L.sc+=.07*d;T.R.sc+=.07*d;for(const e of[T.L,T.R]){e.dx*=1-d;e.dy*=1-d}}},
+  wiggle:{dur:900,f:(k,T)=>{T.body.rot+=Math.sin(k*Math.PI*4)*4*(1-k)}},
+};
+const GNAME={glance:"occhiata",smile:"sorriso",yawn:"sbadiglio",squint:"strizza gli occhi",lookUser:"ti guarda",wiggle:"si scuote"};
+function applyGesture(T,t){
+  if(state!=="idle"||!idleLife.checked){gesture=null;return}
+  if(!gesture&&t>nextGesture){
+    const w={glance:5,smile:2,yawn:t-stateAt>20000?2:.3,squint:1.5,lookUser:2,wiggle:1},names=Object.keys(w);
+    let x=Math.random()*names.reduce((a,n)=>a+w[n],0),name=names[0];for(const n of names){x-=w[n];if(x<=0){name=n;break}}
+    gesture={name,start:t,dir:Math.random()<.5?-1:1,dy:rnd(-2,1.5)};log.textContent="gesto spontaneo: "+GNAME[name];
+  }
+  if(gesture){const g=GESTURES[gesture.name],k=(t-gesture.start)/g.dur;if(k>=1){gesture=null;nextGesture=t+rnd(2500,7000)}else g.f(k,T)}
+}
+
+/* ---------- motore ---------- */
+const lerp=(a,b,k)=>a+(b-a)*k;
+function mix(a,b,k){const o={};for(const key in b)o[key]=typeof b[key]==="object"?mix(a[key],b[key],k):lerp(a[key],b[key],k);return o}
+let state="",prevState="idle",stateAt=0,nextBlink=1500,blinkT=-1,blinkDouble=false,look={x:0,y:0},lookT=0,mouse=null;
+function blinkAmount(t){
+  const noBlink=["sleep","error","done","love","laugh","hello","wink","sleepy"].includes(state);
+  if(blinkT<0&&t>nextBlink&&!noBlink){blinkT=t;blinkDouble=Math.random()<.22;nextBlink=t+rnd(2200,6000)}
+  if(blinkT<0)return 0;const len=blinkDouble?380:150,p=(t-blinkT)/len;if(p>=1){blinkT=-1;return 0}
+  return blinkDouble?Math.abs(Math.sin(p*Math.PI*2)):Math.sin(p*Math.PI);
+}
+function updateLook(t){
+  if(mouse&&followBox.checked){look.x=mouse.x*5;look.y=mouse.y*3.5;return}
+  if(t>lookT){lookT=t+rnd(900,3500);const big=Math.random()<.25;look.x=big?rnd(-4,4):rnd(-1.4,1.4);look.y=big?rnd(-2.2,2.2):rnd(-.8,.8)}
+}
+addEventListener("mousemove",e=>{mouse={x:Math.max(-1,Math.min(1,e.clientX/innerWidth*2-1)),y:Math.max(-1,Math.min(1,e.clientY/innerHeight*2-1))}});
+
+const f2=v=>v.toFixed(2);
+function setRect(n,x,y,w,h,rx){n.setAttribute("x",f2(x));n.setAttribute("y",f2(y));n.setAttribute("width",f2(Math.max(0,w)));n.setAttribute("height",f2(Math.max(0,h)));if(rx!=null)n.setAttribute("rx",f2(rx))}
+function drawEye(r,s,p,cx,cy,blink){
+  const w=p.w*p.sc,h=p.h*p.sc,x=cx-w/2+p.dx,y=cy-h/2+p.dy,rr=Math.min(p.rr,w/2,h/2);
+  setRect(r["eye"+s],x,y,w,h,rr);setRect(r["clip"+s],x-.9,y-.9,w+1.8,h+1.8,rr+.9);
+  r["eye"+s].setAttribute("opacity",f2(p.op));
+  const lt=Math.min(1,Math.max(p.lt,blink)),lidY=y+lt*h,sign=s==="L"?1:-1;
+  setRect(r["lid"+s],x-6,lidY-40,w+12,40);
+  r["lid"+s].setAttribute("transform",`rotate(${f2(p.tilt*sign)} ${f2(x+w/2)} ${f2(lidY)})`);
+  const ch=r["cheek"+s],ry=h*.62;ch.setAttribute("cx",f2(x+w/2));ch.setAttribute("rx",f2(w*.95));ch.setAttribute("ry",f2(ry));ch.setAttribute("cy",f2(y+h+ry-p.lb*h*1.15));
+  setRect(r["shine"+s],x+w*.18,y+h*.14,w*.22,h*.22,w*.11);
+}
+function render(o,T,t){
+  if(!o.cur)o.cur=JSON.parse(JSON.stringify(T));
+  o.cur=mix(o.cur,T,.17);const c=o.cur,r=o.r,blink=blinkAmount(t);
+  const cy=o.island?61:71;
+  drawEye(r,"L",c.L,46,cy,blink);drawEye(r,"R",c.R,74,cy,blink);
+  const b=c.body;r.body.setAttribute("transform",`translate(${f2(b.x)} ${f2(b.y)}) rotate(${f2(b.rot)} 60 98) translate(60 98) scale(${b.sx.toFixed(4)} ${b.sy.toFixed(4)}) translate(-60 -98)`);
+  // puntini SOPRA gli occhi, dentro la bolla
+  const dy=o.island?44.5:52;
+  r.dots.setAttribute("opacity",f2(c.dots));
+  if(c.dots>.02)[...r.dots.children].forEach((d,i)=>{const k=Math.max(0,Math.sin(t/170-i*.9));d.setAttribute("cy",f2(dy-k*2.2));d.setAttribute("opacity",f2(.45+k*.55))});
+  // zz dentro la bolla, in alto a destra: salgono e svaniscono prima del bordo
+  r.zz.setAttribute("opacity",f2(c.zz));
+  if(c.zz>.02){const base=o.island?{x:83,y:56}:{x:86,y:62};
+    [[r.z1,0],[r.z2,.5]].forEach(([z,off])=>{const k=((t/2600)+off)%1;z.setAttribute("x",f2(base.x+k*5+(off?4:0)));z.setAttribute("y",f2(base.y-k*(o.island?8:12)));z.setAttribute("opacity",f2(Math.sin(k*Math.PI)))})}
+  // goccia di sudore (errore, spavento)
+  r.sweat.setAttribute("opacity",f2(c.sweat));
+  if(c.sweat>.02){const k=(t/1600)%1;r.sweat.setAttribute("transform",`translate(${o.island?86:88} ${f2((o.island?50:56)+k*6)})`);r.sweat.setAttribute("opacity",f2(c.sweat*(1-k)))}
+  if(r.glow)r.glow.setAttribute("opacity",f2(c.glow));
+}
+const chars=[build(A,"a",false),build(mA,"ma",true)];
+function frame(t){
+  updateLook(t);
+  const T=target(state,t);
+  const damp=["tool","thinking","error","dizzy","shy","scared"].includes(state)?.2:1;
+  for(const k of["L","R"]){T[k].dx+=look.x*damp;T[k].dy+=look.y*damp}
+  applyGesture(T,t);
+  // risveglio: dopo il sonno doppio battito e un piccolo salto
+  if(prevState==="sleep"&&state!=="sleep"&&t-stateAt<700){const k=(t-stateAt)/700;T.L.lt=Math.max(T.L.lt,Math.abs(Math.cos(k*Math.PI*2))*(1-k));T.R.lt=T.L.lt;T.body.y-=Math.sin(k*Math.PI)*4}
+  chars.forEach(o=>render(o,JSON.parse(JSON.stringify(T)),t));
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+function setState(s){
+  if(s===state)return;
+  prevState=state||"idle";state=s;stateAt=performance.now();
+  if(prevState!=="sleep"&&!["done","hello","wink","love","laugh"].includes(s)){blinkT=performance.now();blinkDouble=false}   // ogni cambio di stato passa da un battito
+  gesture=null;nextGesture=performance.now()+rnd(3000,6000);log.textContent="";
+  document.querySelectorAll(".states button").forEach(b=>b.classList.toggle("on",b.dataset.s===s));
+  document.querySelectorAll(".st").forEach(e=>e.textContent=LABEL[s]);
+  chars.forEach(o=>o.svg.style.color=COLOR[s]);
+  document.documentElement.style.setProperty("--accent",COLOR[s]);
+}
+for(const [box,list] of [[states,STATES],[extras,EXTRAS]])for(const [s,l] of list){const b=document.createElement("button");b.textContent=l;b.dataset.s=s;b.onclick=()=>{demo.checked=false;stopDemo();setState(s)};box.appendChild(b)}
+setState("idle");
+let timer=null;function stopDemo(){clearInterval(timer);timer=null}
+demo.onchange=e=>{stopDemo();if(!e.target.checked)return;const seq=["hello","idle","listening","thinking","tool","approval","replying","done","idle","error","dizzy","sleep","idle","curious","laugh"];let i=0;setState(seq[0]);timer=setInterval(()=>{i=(i+1)%seq.length;setState(seq[i])},2600)};
+</script>
+</body>
+</html>

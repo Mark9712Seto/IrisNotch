@@ -1,0 +1,14 @@
+{
+  "name": "iris-volto",
+  "private": true,
+  "version": "0.1.5",
+  "scripts": {
+    "tauri": "tauri",
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "demo": "python3 ../tools/bundle_demo.py"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.12.1"
+  }
+}

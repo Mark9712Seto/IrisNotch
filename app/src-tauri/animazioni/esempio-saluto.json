@@ -1,0 +1,44 @@
+{
+  "nome": "Saluto con il cuore",
+  "durata": 5000,
+  "colore_occhi": "#f9a8d4",
+  "occhi": [
+    { "t": 0 },
+    { "t": 0.2, "sorriso": 0.6, "dy": -8 },
+    { "t": 0.75, "sorriso": 0.6, "dy": -8 },
+    { "t": 1, "sorriso": 0, "dy": 0 }
+  ],
+  "destro": [
+    { "t": 0.4, "palpebra": 0 },
+    { "t": 0.48, "palpebra": 1 },
+    { "t": 0.58, "palpebra": 0 }
+  ],
+  "oggetti": [
+    {
+      "forma": "cuore", "colore": "#fb7185", "dimensione": 6,
+      "chiavi": [
+        { "t": 0, "x": 80, "y": 110, "scala": 0 },
+        { "t": 0.3, "x": 80, "y": 50, "scala": 1 },
+        { "t": 0.8, "x": 84, "y": 20, "scala": 1, "opacita": 1 },
+        { "t": 1, "x": 86, "y": -10, "scala": 0.6, "opacita": 0 }
+      ]
+    },
+    {
+      "forma": "testo", "testo": "ciao!", "colore": "#fde68a", "dimensione": 5,
+      "chiavi": [
+        { "t": 0.35, "x": 18, "y": 40, "opacita": 0 },
+        { "t": 0.45, "x": 18, "y": 35, "opacita": 1 },
+        { "t": 0.85, "x": 18, "y": 35, "opacita": 1 },
+        { "t": 1, "x": 18, "y": 30, "opacita": 0 }
+      ]
+    },
+    {
+      "forma": "stella", "colore": "#ffffff", "dimensione": 3, "dietro": true,
+      "chiavi": [
+        { "t": 0, "x": 30, "y": 20, "scala": 0, "rotazione": 0 },
+        { "t": 0.5, "x": 30, "y": 20, "scala": 1, "rotazione": 90 },
+        { "t": 1, "x": 30, "y": 20, "scala": 0, "rotazione": 180 }
+      ]
+    }
+  ]
+}

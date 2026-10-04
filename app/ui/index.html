@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Iris Notch</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="desk" class="desk"></div>
+
+<div id="island" class="island collapsed" data-state="idle">
+  <div class="bar" id="bar">
+    <div class="eyes" id="eyes"></div>
+    <div class="status" id="status"></div>
+    <div class="head">
+      <button class="sess-btn" id="sessBtn" title="Sessioni"><span id="sessTitle">Nuova conversazione</span><i data-i="down"></i></button>
+      <button class="ic" id="newBtn" title="Nuova conversazione"><i data-i="plus"></i></button>
+      <button class="ic" id="pinBtn" title="Tieni aperta"><i data-i="pin"></i></button>
+      <button class="ic" id="setBtn" title="Impostazioni"><i data-i="sliders"></i><span class="dot" id="updDot"></span></button>
+    </div>
+  </div>
+
+  <div class="cd" id="cd"></div>
+  <div class="body">
+    <div class="menu" id="menu">
+      <div id="pinWrap"><div class="menu-lbl">Fissate</div><div id="menuPinned"></div></div>
+      <div class="menu-lbl">Dall'isola</div>
+      <div id="menuMine"></div>
+      <button class="menu-more" id="moreBtn"><span>Altre sessioni</span><i data-i="right"></i></button>
+      <div class="others" id="others">
+        <div class="search"><i data-i="search"></i><input id="search" placeholder="Cerca nelle sessioni…"></div>
+        <div id="menuOthers"></div>
+      </div>
+    </div>
+
+    <div class="chat" id="chat"></div>
+
+    <div class="card approval" id="approval">
+      <div class="card-h"><i data-i="alert"></i><b>Iris chiede il via libera</b></div>
+      <div class="ap-desc" id="apDesc"></div>
+      <code id="apCmd"></code>
+      <div class="row2"><button class="btn ok" id="apOnce"><i data-i="check"></i>Una volta</button><button class="btn" id="apDeny"><i data-i="x"></i>Nega</button></div>
+    </div>
+
+    <div class="card voice" id="voice">
+      <div class="card-h"><i data-i="mic"></i><b id="vTitle">Ti ascolto…</b><span class="hint" id="vHint"></span></div>
+      <div class="meter" id="meter"></div>
+      <textarea id="vText" rows="2"></textarea>
+      <div class="row2" id="vBtns"><button class="btn ok" id="vSend"><i data-i="send"></i>Invia</button><button class="btn" id="vRedo"><i data-i="mic"></i>Rifai</button><button class="btn" id="vCancel"><i data-i="x"></i>Annulla</button></div>
+    </div>
+
+    <div class="composer">
+      <button class="ic tts" id="ttsBtn" title="Risposte a voce"><i data-i="vol"></i></button>
+      <textarea id="input" rows="1" placeholder="Scrivi a Iris…"></textarea>
+      <button class="ic mic" id="micBtn" title="Premi e parla"><i data-i="mic"></i></button>
+      <button class="ic send" id="sendBtn" title="Invia"><i data-i="send"></i></button>
+    </div>
+
+    <div class="settings" id="settings">
+      <div class="set-h"><button class="ic" id="setBack"><i data-i="back"></i></button><b>Impostazioni</b></div>
+      <div class="set-body">
+        <section>
+          <h3>Hermes</h3>
+          <label>Indirizzo<input id="sUrl" placeholder="http://indirizzo-di-hermes:8642"></label>
+          <div class="keyrow"><label>Chiave API <i class="q" data-tip="Si incolla una volta. Viene salvata nel Gestore credenziali di Windows, mai in un file, e non si rivede.">?</i><input id="sKey" type="password" autocomplete="off"></label><button class="btn sm" id="sTest" title="Prova la connessione con Hermes">Test</button></div>
+          <span class="res" id="sTestRes"></span>
+        </section>
+        <section>
+          <h3>Voce → testo</h3>
+          <div class="seg" id="sSttMode"><button data-v="local">Sul mio PC</button><button data-v="server">Server Whisper</button></div>
+          <div data-show="local">
+            <label>Modello<select id="sModel">
+              <option value="large-v3-turbo-q5_0">large-v3-turbo · 574 MB · consigliato con scheda video</option>
+              <option value="small-q5_1">small · 190 MB · più leggero, va anche senza scheda video</option>
+            </select></label>
+            <div class="row2"><span class="res" id="sModelState"></span><button class="btn" id="sModelDl">Scarica</button></div>
+            <div class="bar-p"><div id="sModelProg"></div></div>
+          </div>
+          <div data-show="server">
+            <label>Tipo di server<select id="sSttType"><option value="openai">Compatibile OpenAI · /v1/audio/transcriptions</option><option value="whispercpp">whisper.cpp server · /inference</option></select></label>
+            <label>Indirizzo<input id="sSttUrl" placeholder="http://server:8000"></label>
+            <label>Chiave (se serve)<input id="sSttKey" type="password" autocomplete="off"></label>
+          </div>
+          <div class="pair">
+            <label class="chip"><input type="checkbox" id="sNoPreview"><span>Invia subito</span><i class="q" data-tip="Quello che dici parte appena smetti di parlare, senza l'anteprima da correggere.">?</i></label>
+            <label data-show="local">Libera la scheda video dopo <i class="q" data-tip="Se non parli per questo tempo, il modello di trascrizione esce dalla memoria della scheda video. Alla volta dopo si ricarica da solo in un paio di secondi. «Mai» lo tiene sempre pronto.">?</i><select id="sUnload"><option value="2">2 minuti fermo</option><option value="10">10 minuti fermo</option><option value="30">30 minuti fermo</option><option value="0">mai</option></select></label>
+          </div>
+        </section>
+        <section>
+          <h3>Testo → voce</h3>
+          <label>Volume della voce: <b id="sVolVal">100%</b> <i class="q" data-tip="Quanto forte parla Iris (e quanto forte suona l'avviso di arrivo). Cambia subito: alla fine del cursore senti un piccolo suono di prova.">?</i><input type="range" id="sVol" min="0" max="100" step="5"></label>
+          <div class="pair">
+            <label class="chip"><input type="checkbox" id="sTtsAuto"><span>Leggi ad alta voce</span><i class="q" data-tip="Iris legge le risposte appena arrivano. Si cambia anche dall'altoparlante vicino al campo di testo.">?</i></label>
+            <label class="chip"><input type="checkbox" id="sChime"><span>Suono di arrivo</span><i class="q" data-tip="Un breve suono quando arriva una risposta.">?</i></label>
+          </div>
+          <div class="seg" id="sTtsEngine"><button data-v="local">Sul mio PC</button><button data-v="system">Voce di Windows</button><button data-v="server">Server TTS</button></div>
+          <div data-show="local">
+            <div class="confirm" id="lConfirm"></div>
+            <div class="confirm" id="lOld"></div>
+            <div id="lNotInstalled">
+              <div class="keyrow"><button class="btn" id="lInstall">Scarica la voce locale (circa 85 MB)</button><i class="q" data-tip="Voce italiana che gira sul tuo PC con Piper, sul processore: va bene anche su computer poco potenti e non serve la scheda video. Si scarica una volta, circa 85 MB tra programma e voce.">?</i></div>
+            </div>
+            <div class="inst" id="lProgress"><div class="res" id="lMsg"></div><div class="bar-p show"><div id="lProg"></div></div></div>
+            <div id="lInstalled">
+              <div class="keyrow"><label>Voce<select id="lVoice"></select></label><button class="btn sm try" title="Fai sentire una frase di prova">Prova voce</button></div>
+              <p class="help" id="lSpeed"></p>
+            </div>
+          </div>
+          <div data-show="system"><div class="keyrow"><label>Voce<select id="sVoice"></select></label><button class="btn sm try" title="Fai sentire una frase di prova">Prova voce</button></div></div>
+          <div data-show="server">
+            <label>Indirizzo <i class="q" data-tip="Server compatibile OpenAI (/v1/audio/speech): per esempio Piper o Kokoro dietro openedai-speech, Kokoro-FastAPI o speaches.">?</i><input id="sTtsUrl" placeholder="http://server:8880"></label>
+            <div class="keyrow"><label>Voce<input id="sTtsVoice" placeholder="es. it_IT-paola-medium"></label><button class="btn sm try" title="Fai sentire una frase di prova">Prova voce</button></div>
+            <label>Chiave (se serve)<input id="sTtsKey" type="password" autocomplete="off"></label>
+          </div>
+          <span class="res" id="sTtsRes"></span>
+          <div class="pair">
+            <label>Velocità<input type="range" id="sRate" min="0.7" max="1.5" step="0.05"></label>
+            <label data-show="local">Spegni la voce dopo <i class="q" data-tip="Se non la usi per questo tempo, la voce locale si spegne e libera la memoria della scheda video (circa 2,5 GB). Alla frase dopo si riaccende da sola, con qualche secondo di attesa. «Mai» la tiene sempre pronta.">?</i><select id="lUnload"><option value="2">2 minuti fermo</option><option value="10">10 minuti fermo</option><option value="30">30 minuti fermo</option><option value="0">mai</option></select></label>
+          </div>
+        </section>
+        <section>
+          <h3>Isola <i class="q" data-tip="Per spostarla tienila premuta e trascinala. Tirata giù dal bordo si stacca e diventa una bolla, anche su un altro schermo; riportata in cima torna tacca. Da aperta si prende dagli occhi.">?</i></h3>
+          <div class="row2 two">
+            <label>Si apre<select id="sOpenWhen">
+              <option value="300">passando sopra, subito</option><option value="600">passando sopra, dopo 0,6 s</option>
+              <option value="1000">passando sopra, dopo 1 s</option><option value="1500">passando sopra, dopo 1,5 s</option>
+              <option value="2000">passando sopra, dopo 2 s</option><option value="click">solo con un clic</option></select></label>
+            <label>Si richiude<select id="sCloseAfter">
+              <option value="700">dopo 0,7 s</option><option value="1000">dopo 1 s</option><option value="1500">dopo 1,5 s</option>
+              <option value="2000">dopo 2 s</option><option value="3000">dopo 3 s</option><option value="5000">dopo 5 s</option></select></label>
+          </div>
+          <div class="pair">
+            <label class="chip"><input type="checkbox" id="sFollow"><span>Occhi che seguono</span><i class="q" data-tip="Gli occhi guardano il puntatore del mouse quando gli passi vicino.">?</i></label>
+            <button class="btn" id="sIslCenter">Rimettila al centro</button>
+          </div>
+        </section>
+        <section>
+          <h3>Scorciatoie</h3>
+          <div class="row2 two">
+            <label>Premi e parla<input id="sPtt"></label>
+            <label>Apri l'isola<input id="sOpen"></label>
+          </div>
+        </section>
+        <section>
+          <h3>Generale</h3>
+          <div class="pair">
+            <label>Il tuo compleanno <i class="q" data-tip="Facoltativo. Quel giorno Iris ti fa gli auguri con i coriandoli.">?</i><div class="bday"><select id="sBDay" aria-label="Giorno"></select><select id="sBMonth" aria-label="Mese"></select></div></label>
+            <label class="chip"><input type="checkbox" id="sAutostart"><span>Avvia con Windows</span><i class="q" data-tip="Iris Notch parte da sola quando accendi il PC.">?</i></label>
+          </div>
+          <div class="pair">
+          <label>Cornice nera: <b id="sBorderVal">6 px</b> <i class="q" data-tip="Quanto spazio nero resta tra gli occhi e il bordo dell'isola chiusa. Più è alto, più l'isola è grande e gli occhi stanno al centro di una cornice più spessa. Con «Mostra l'area» (in Debug) si vede bene dove arrivano.">?</i><input type="range" id="sBorder" min="0" max="16" step="1"></label>
+            <label>Dimensione <i class="q" data-tip="Ingrandisce o rimpicciolisce tutta l'app insieme: isola, occhi, chat e impostazioni. Si vede subito; si tiene con Salva.">?</i><select id="sZoom"><option value="0.85">Piccola</option><option value="1">Normale</option><option value="1.2">Grande</option></select></label>
+          </div>
+        </section>
+        <section>
+          <h3>Debug e prove</h3>
+          <div class="pair">
+            <label class="chip"><input type="checkbox" id="sDebug"><span>Modalità debug</span><i class="q" data-tip="Registra nel log tutte le azioni, non solo gli errori. Il log non contiene mai le chiavi; il testo dei messaggi ci finisce solo con questa modalità accesa.">?</i></label>
+            <label class="chip"><input type="checkbox" id="sShowArea"><span>Mostra l'area</span><i class="q" data-tip="Colora l'area dove si muovono le animazioni, per vedere il bordo nero. Non viene salvato.">?</i></label>
+          </div>
+          <div class="row2 wrap"><button class="btn" id="sLogShow">Ultimi errori</button><button class="btn" id="sLogOpen">Cartella dei log</button></div>
+          <div class="line"><span>Animazioni personali <i class="q" data-tip="File .json nella cartella animazioni: occhi e forme descritti a momenti chiave, niente codice. Nella cartella ci sono la GUIDA.md con tutte le regole e un esempio da copiare.">?</i></span><span class="res" id="aCount"></span></div>
+          <div class="row2 wrap"><button class="btn" id="aOpen">Cartella</button><button class="btn" id="aReload">Ricarica</button><button class="btn" id="aTry">Prova le mie</button></div>
+          <pre class="logbox" id="sLog"></pre>
+        </section>
+        <section class="about"><details>
+          <summary><h3>Informazioni</h3><span class="about-name">Iris Notch <span id="aboutVer"></span> · Variety Project</span></summary>
+          <div class="about-body">
+          <p class="help">© 2026 Variety Project. Gratis da usare, modificare e condividere per scopi non commerciali (licenza PolyForm Noncommercial 1.0.0). Venderlo o usarlo in un prodotto a pagamento richiede il nostro permesso.</p>
+          <p class="help"><b>I tuoi dati.</b> Niente account, niente statistiche, niente tracciamento. Le conversazioni vanno solo al server Hermes che hai indicato. La voce viene trascritta sul tuo PC (o sul tuo server Whisper). Le chiavi restano nel Gestore credenziali di Windows. Internet serve solo per scaricare i modelli quando lo chiedi e per controllare se c'è una versione nuova.</p>
+          <div class="row2 wrap"><button class="btn" data-link="/blob/main/LICENSE">Licenza</button><button class="btn" data-link="/blob/main/PRIVACY.md">Privacy</button><button class="btn" data-link="/blob/main/THIRD-PARTY.md">Crediti</button><button class="btn" data-link="">Codice</button></div>
+          <p class="help">Iris Notch è un progetto indipendente: non è affiliato a Nous Research (Hermes Agent) né al progetto Piper. Il programma è fornito così com'è, senza garanzie.</p>
+          </div>
+        </details></section>
+      </div>
+      <div class="upd" id="upd"><span class="dot"></span><span id="updTxt"></span><button class="btn" id="updOpen">Apri su GitHub</button></div>
+      <div class="set-f"><button class="btn ok" id="sSave"><i data-i="check"></i>Salva</button><button class="btn sm undo" id="sUndo" title="Annulla le modifiche non salvate">Annulla</button><span class="ver" id="verTxt"></span></div>
+    </div>
+  </div>
+</div>
+
+<div class="demo-bar" id="demoBar"></div>
+
+<script src="eyes.js"></script>
+<script src="mock.js"></script>
+<script src="backend.js"></script>
+<script src="tts.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

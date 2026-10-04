@@ -1,0 +1,44 @@
+name: Pages
+
+# Pubblica il sito (site/) su GitHub Pages, con la demo dell'app nel browser e il motore degli occhi
+# presi direttamente da app/ui: così la pagina mostra sempre gli occhi e l'interfaccia della versione su main.
+on:
+  push:
+    branches: [main]
+    paths: ["site/**", "app/ui/**", "docs/images/**", "tools/bundle_demo.py", ".github/workflows/pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepara il sito
+        run: |
+          mkdir -p design _site
+          python3 tools/bundle_demo.py
+          cp -r site/. _site/
+          cp design/isola-demo.html _site/demo.html
+          cp app/ui/eyes.js _site/eyes.js
+          mkdir -p _site/images && cp docs/images/* _site/images/
+          touch _site/.nojekyll
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4

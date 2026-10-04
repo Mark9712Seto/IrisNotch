@@ -1,0 +1,5 @@
+node_modules/
+target/
+app/src-tauri/gen/
+*.log
+.DS_Store

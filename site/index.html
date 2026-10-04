@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Iris Notch</title>
+<meta name="description" content="A Dynamic-Island-style face for your Hermes agent on Windows: two animated eyes that show what the agent is doing, with chat, voice and approvals.">
+<meta property="og:title" content="Iris Notch — a face for your Hermes agent">
+<meta property="og:description" content="Two animated eyes at the top of your Windows screen that show what your AI agent is doing. Chat, push-to-talk, spoken replies, approvals.">
+<meta property="og:image" content="images/hero.gif">
+<meta name="theme-color" content="#07080c">
+<link rel="icon" href="images/logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#"><img src="images/logo.svg" alt="">Iris Notch</a>
+    <nav>
+      <a href="#features"><span lang="en">Features</span><span lang="it">Funzioni</span></a>
+      <a href="animations.html"><span lang="en">Animations</span><span lang="it">Animazioni</span></a>
+      <a href="demo.html">Demo</a>
+      <a href="#privacy">Privacy</a>
+      <a href="#install"><span lang="en">Install</span><span lang="it">Installa</span></a>
+      <a href="#dial">Iris Dial</a>
+    </nav>
+    <div class="lang" role="group" aria-label="Language"><button data-l="en">EN</button><button data-l="it">IT</button></div>
+    <a class="gh" href="https://github.com/Mark9712Seto/IrisNotch"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a>
+  </div>
+</header>
+
+<main>
+  <!-- HERO -->
+  <div class="hero">
+    <div class="wrap">
+      <div class="stage">
+        <div id="heroNotch" title="Poke me"></div>
+        <div class="cap" id="heroCap"></div>
+      </div>
+      <div class="copy">
+        <span class="eyebrow"><span lang="en">For Hermes Agent · Windows 10 / 11</span><span lang="it">Per Hermes Agent · Windows 10 / 11</span></span>
+        <h1><span lang="en">A <em>face</em> for your AI&nbsp;agent</span><span lang="it">Un <em>volto</em> per il tuo agente&nbsp;AI</span></h1>
+        <p class="lede">
+          <span lang="en">Iris Notch lives at the top of your screen like a Dynamic Island. Two animated eyes show what your <a href="https://github.com/NousResearch/hermes-agent">Hermes agent</a> is doing: thinking, using a tool, answering, waiting for your OK. Hover it to chat, hold a shortcut to talk, and let it answer out loud.</span>
+          <span lang="it">Iris Notch vive in cima allo schermo, come una Dynamic Island. Due occhi animati mostrano cosa sta facendo il tuo <a href="https://github.com/NousResearch/hermes-agent">agente Hermes</a>: pensa, usa uno strumento, risponde, aspetta il tuo via libera. Ci passi sopra per scrivergli, tieni premuta una scorciatoia per parlargli, e ti risponde anche a voce.</span>
+        </p>
+        <div class="btns" style="justify-content:center">
+          <a class="btn primary" href="https://github.com/Mark9712Seto/IrisNotch/releases/latest"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5 10.5 4.4v7.1H3zm0 13 7.5 1.1v-7H3zm8.5 1.3L21 21.3V12.6h-9.5zm0-15.6v7.4H21V2.7z"/></svg><span lang="en">Download for Windows</span><span lang="it">Scarica per Windows</span></a>
+          <a class="btn" href="demo.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span lang="en">Try the live demo</span><span lang="it">Prova la demo</span></a>
+        </div>
+        <div class="fine">
+          <span lang="en">Free for personal use</span><span lang="it">Gratis per uso personale</span>
+          <span lang="en">No account, no telemetry</span><span lang="it">Niente account né statistiche</span>
+          <span lang="en">Voice runs on your PC</span><span lang="it">La voce gira sul tuo PC</span>
+        </div>
+        <span class="hint"><span lang="en">↑ these are the real eyes from the app. Click them.</span><span lang="it">↑ questi sono gli occhi veri dell'app. Cliccali.</span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATI -->
+  <section id="states">
+    <div class="wrap">
+      <div class="sh">
+        <span class="eyebrow"><span lang="en">Live agent state</span><span lang="it">Lo stato dell'agente, dal vivo</span></span>
+        <h2><span lang="en">You can tell at a glance what it's doing</span><span lang="it">Capisci al volo cosa sta facendo</span></h2>
+        <p><span lang="en">The eyes follow the real events of every Hermes run. No need to open a window to know whether it's still working, waiting for you, or done.</span><span lang="it">Gli occhi seguono gli eventi veri di ogni richiesta a Hermes. Non serve aprire niente per sapere se sta ancora lavorando, se aspetta te o se ha finito.</span></p>
+      </div>
+      <div class="states" id="statesGrid"></div>
+    </div>
+  </section>
+
+  <!-- FUNZIONI -->
+  <section id="features">
+    <div class="wrap">
+      <div class="sh">
+        <span class="eyebrow"><span lang="en">What it does</span><span lang="it">Cosa fa</span></span>
+        <h2><span lang="en">Small on the outside, a full assistant on the inside</span><span lang="it">Piccola fuori, un assistente completo dentro</span></h2>
+      </div>
+
+      <div class="feat">
+        <div>
+          <span class="tag"><span lang="en">Chat</span><span lang="it">Chat</span></span>
+          <h3><span lang="en">Hover it and it opens into a chat</span><span lang="it">Ci passi sopra e diventa una chat</span></h3>
+          <p><span lang="en">Replies stream in word by word, with the tools the agent is using shown as they happen. Pin it to keep it open while you work.</span><span lang="it">Le risposte arrivano parola per parola, e vedi gli strumenti che l'agente usa mentre li usa. Con la puntina resta aperta mentre lavori.</span></p>
+          <ul>
+            <li><span lang="en">Opens on hover or on click, with your own delays</span><span lang="it">Si apre passando sopra o con un clic, con i tempi che scegli tu</span></li>
+            <li><span lang="en">Read any reply aloud, copy it, start a new chat in one click</span><span lang="it">Ogni risposta si ascolta o si copia; nuova chat con un clic</span></li>
+            <li><span lang="en">A notch at the top, or a floating bubble anywhere, even on another monitor</span><span lang="it">Tacca in cima, oppure bolla da mettere dove vuoi, anche su un altro schermo</span></li>
+          </ul>
+        </div>
+        <div class="shot"><img src="images/reply.png" alt="Iris Notch open with a chat" loading="lazy"></div>
+      </div>
+
+      <div class="feat flip">
+        <div>
+          <span class="tag"><span lang="en">Sessions</span><span lang="it">Sessioni</span></span>
+          <h3><span lang="en">Pick up any conversation, wherever it started</span><span lang="it">Riprendi qualsiasi conversazione, ovunque sia nata</span></h3>
+          <p><span lang="en">The chats you started from the island come first. Everything else — Telegram, CLI, scheduled jobs — is one click away under “Other sessions”, with search.</span><span lang="it">Prima le chat nate dall'isola. Tutte le altre (Telegram, terminale, attività programmate) sono a un clic in “Altre sessioni”, con la ricerca.</span></p>
+          <ul>
+            <li><span lang="en">Rename and pin sessions; names are saved on Hermes</span><span lang="it">Rinomina e fissa le sessioni; i nomi restano su Hermes</span></li>
+          </ul>
+        </div>
+        <div class="shot duo"><img src="images/sessions.png" alt="Session list" loading="lazy"><img src="images/other-sessions.png" alt="Other sessions with search" loading="lazy"></div>
+      </div>
+
+      <div class="feat">
+        <div>
+          <span class="tag"><span lang="en">Approvals</span><span lang="it">Via libera</span></span>
+          <h3><span lang="en">It asks before it acts</span><span lang="it">Chiede prima di agire</span></h3>
+          <p><span lang="en">When the agent wants to do something that needs your permission, the eyes turn red and the exact command shows up. Allow it once, or deny it.</span><span lang="it">Quando l'agente vuole fare qualcosa che richiede il tuo permesso, gli occhi diventano rossi e compare il comando esatto. Lo permetti una volta, o lo neghi.</span></p>
+          <ul>
+            <li><span lang="en">“Always allow” is left to Hermes' own interfaces, on purpose</span><span lang="it">“Consenti sempre” resta di proposito alle interfacce di Hermes</span></li>
+          </ul>
+        </div>
+        <div class="shot"><img src="images/approval.png" alt="Approval request" loading="lazy"></div>
+      </div>
+
+      <div class="feat flip">
+        <div>
+          <span class="tag"><span lang="en">Voice</span><span lang="it">Voce</span></span>
+          <h3><span lang="en">Talk to it, and hear it answer</span><span lang="it">Parlagli, e ascolta la risposta</span></h3>
+          <p><span lang="en">Hold a shortcut and speak: speech-to-text runs on your PC with whisper.cpp (GPU via Vulkan) or on your own Whisper server, with an editable preview before sending.</span><span lang="it">Tieni premuta una scorciatoia e parla: la trascrizione gira sul tuo PC con whisper.cpp (scheda video con Vulkan) o sul tuo server Whisper, con un'anteprima da correggere prima di inviare.</span></p>
+          <ul>
+            <li><span lang="en">Local Italian voices with <a href="https://github.com/rhasspy/piper">Piper</a>: about 85 MB, on the CPU, no GPU or Python needed</span><span lang="it">Voci italiane locali con <a href="https://github.com/rhasspy/piper">Piper</a>: circa 85 MB, sul processore, senza scheda video né Python</span></li>
+            <li><span lang="en">Or Windows voices, or any OpenAI-compatible TTS server</span><span lang="it">Oppure le voci di Windows, o un server TTS compatibile OpenAI</span></li>
+            <li><span lang="en">Reading starts with the first sentence, while the reply is still being written</span><span lang="it">La lettura parte dalla prima frase, mentre la risposta si sta ancora scrivendo</span></li>
+          </ul>
+        </div>
+        <div class="shot"><img src="images/settings-voice.png" alt="Voice settings" loading="lazy"></div>
+      </div>
+
+      <div class="feat">
+        <div>
+          <span class="tag"><span lang="en">Settings</span><span lang="it">Impostazioni</span></span>
+          <h3><span lang="en">Everything in one small panel</span><span lang="it">Tutto in un piccolo pannello</span></h3>
+          <p><span lang="en">Connect to Hermes with an address and a key, test it, choose the voice, the size of the island, the shortcuts. Nothing changes until you press Save.</span><span lang="it">Ti colleghi a Hermes con indirizzo e chiave, provi la connessione, scegli voce, grandezza dell'isola e scorciatoie. Non cambia niente finché non premi Salva.</span></p>
+          <ul>
+            <li><span lang="en">Keys go to the Windows Credential Manager, never to a file</span><span lang="it">Le chiavi vanno nel Gestore credenziali di Windows, mai in un file</span></li>
+            <li><span lang="en">A small dot tells you when a new version is out: nothing installs by itself</span><span lang="it">Un pallino ti avvisa quando esce una versione nuova: non si installa niente da solo</span></li>
+          </ul>
+        </div>
+        <div class="shot"><img src="images/settings.png" alt="Settings panel" loading="lazy"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PERSONALITÀ -->
+  <section id="personality">
+    <div class="wrap">
+      <div class="sh">
+        <span class="eyebrow"><span lang="en">Personality</span><span lang="it">Personalità</span></span>
+        <h2><span lang="en">It has a life of its own</span><span lang="it">Ha una vita sua</span></h2>
+        <p><span lang="en">It blinks, looks around and follows your mouse — sometimes eagerly, sometimes it couldn't care less. Leave it alone and it takes a nap. Every now and then, a surprise: more than 50 little animations, with holidays from around the world and greetings that change with the time of day.</span><span lang="it">Sbatte le palpebre, si guarda intorno e segue il mouse: a volte con attenzione, a volte se ne frega. Se lo lasci stare si appisola. Ogni tanto, una sorpresa: più di 50 piccole animazioni, con feste da tutto il mondo e saluti che cambiano con l'ora.</span></p>
+      </div>
+      <div class="eggs" id="eggsGrid"></div>
+      <div class="btns" style="margin-top:26px">
+        <a class="btn" href="animations.html"><span lang="en">See all the animations →</span><span lang="it">Guarda tutte le animazioni →</span></a>
+      </div>
+
+      <div class="feat" style="margin-top:40px">
+        <div>
+          <span class="tag"><span lang="en">Make your own</span><span lang="it">Creane di tue</span></span>
+          <h3><span lang="en">Add your own animations, no code needed</span><span lang="it">Aggiungi animazioni tue, senza codice</span></h3>
+          <p><span lang="en">Drop a small <code>.json</code> file in <code>%APPDATA%\Iris Notch\animazioni</code>: key moments for the eyes (look, smile, wink…) and for a few shapes (heart, star, circle, text). The app fills in the motion in between. It's description only — a file from the internet can move eyes and shapes, nothing else.</span><span lang="it">Metti un piccolo file <code>.json</code> in <code>%APPDATA%\Iris Notch\animazioni</code>: momenti chiave per gli occhi (sguardo, sorriso, occhiolino…) e per qualche forma (cuore, stella, cerchio, testo). L'app calcola il movimento in mezzo. È solo una descrizione: un file preso da internet può muovere occhi e forme, nient'altro.</span></p>
+          <ul>
+            <li><span lang="en">A guide with every rule and measure, plus an example, is created in the folder</span><span lang="it">Nella cartella trovi una guida con tutte le regole e le misure, e un esempio</span></li>
+            <li><span lang="en">Choose dates or hours for it, or let it join the daily surprises</span><span lang="it">Scegli date o ore, oppure lasciala tra le sorprese di ogni giorno</span></li>
+          </ul>
+        </div>
+<pre class="code">{
+  <span class="k">"nome"</span>: <span class="s">"Saluto con il cuore"</span>,
+  <span class="k">"durata"</span>: <span class="n">5000</span>,
+  <span class="k">"colore_occhi"</span>: <span class="s">"#f9a8d4"</span>,
+  <span class="k">"occhi"</span>: [
+    { <span class="k">"t"</span>: <span class="n">0</span> },
+    { <span class="k">"t"</span>: <span class="n">0.2</span>, <span class="k">"sorriso"</span>: <span class="n">0.6</span>, <span class="k">"dy"</span>: <span class="n">-8</span> },
+    { <span class="k">"t"</span>: <span class="n">1</span>, <span class="k">"sorriso"</span>: <span class="n">0</span> }
+  ],
+  <span class="k">"oggetti"</span>: [{
+    <span class="k">"forma"</span>: <span class="s">"cuore"</span>, <span class="k">"colore"</span>: <span class="s">"#fb7185"</span>,
+    <span class="k">"chiavi"</span>: [
+      { <span class="k">"t"</span>: <span class="n">0</span>,   <span class="k">"x"</span>: <span class="n">80</span>, <span class="k">"y"</span>: <span class="n">110</span>, <span class="k">"scala"</span>: <span class="n">0</span> },
+      { <span class="k">"t"</span>: <span class="n">0.3</span>, <span class="k">"x"</span>: <span class="n">80</span>, <span class="k">"y"</span>: <span class="n">50</span>,  <span class="k">"scala"</span>: <span class="n">1</span> }
+    ]
+  }],
+  <span class="k">"quando"</span>: { <span class="k">"date"</span>: <span class="s">"02-14"</span> }
+}</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRIVACY -->
+  <section id="privacy">
+    <div class="wrap">
+      <div class="sh">
+        <span class="eyebrow">Privacy</span>
+        <h2><span lang="en">Your conversations stay between you and your agent</span><span lang="it">Le tue conversazioni restano tra te e il tuo agente</span></h2>
+        <p><span lang="en">Iris Notch has no servers of its own. It talks to the Hermes server you choose, and to nothing else unless you ask.</span><span lang="it">Iris Notch non ha server suoi. Parla con il server Hermes che scegli tu, e con nient'altro se non sei tu a chiederlo.</span></p>
+      </div>
+      <div class="cards">
+        <div class="card"><div class="ic"><svg viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg></div>
+          <h3><span lang="en">No account, no telemetry</span><span lang="it">Niente account né statistiche</span></h3>
+          <p><span lang="en">No sign-up, no analytics, no tracking, no ads.</span><span lang="it">Nessuna registrazione, nessuna statistica, nessun tracciamento, nessuna pubblicità.</span></p></div>
+        <div class="card"><div class="ic"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
+          <h3><span lang="en">Keys in Windows' vault</span><span lang="it">Chiavi nella cassaforte di Windows</span></h3>
+          <p><span lang="en">The Hermes key and the others live in the Windows Credential Manager, never in a file, and never go back to the interface.</span><span lang="it">La chiave di Hermes e le altre stanno nel Gestore credenziali di Windows, mai in un file, e non tornano mai all'interfaccia.</span></p></div>
+        <div class="card"><div class="ic"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></div>
+          <h3><span lang="en">Your voice stays home</span><span lang="it">La tua voce resta a casa</span></h3>
+          <p><span lang="en">Speech is transcribed on your PC, or on a server of yours. The local voice speaks offline.</span><span lang="it">Quello che dici si trascrive sul tuo PC, o su un tuo server. La voce locale parla senza internet.</span></p></div>
+        <div class="card"><div class="ic"><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0-4-4m4 4 4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></div>
+          <h3><span lang="en">Only what you ask for</span><span lang="it">Solo quello che chiedi</span></h3>
+          <p><span lang="en">Speech models and voices are downloaded only after you confirm. The update check just reads the latest version number on GitHub.</span><span lang="it">Modelli e voci si scaricano solo dopo la tua conferma. Il controllo degli aggiornamenti legge solo il numero dell'ultima versione su GitHub.</span></p></div>
+      </div>
+      <p style="margin-top:22px;color:var(--muted)"><span lang="en">The full list of what goes where is in </span><span lang="it">L'elenco completo di cosa va dove è in </span><a href="https://github.com/Mark9712Seto/IrisNotch/blob/main/PRIVACY.md">PRIVACY.md</a>.</p>
+    </div>
+  </section>
+
+  <!-- INSTALLA -->
+  <section id="install">
+    <div class="wrap">
+      <div class="sh">
+        <span class="eyebrow"><span lang="en">Get started</span><span lang="it">Per iniziare</span></span>
+        <h2><span lang="en">Up and running in three steps</span><span lang="it">Pronta in tre passi</span></h2>
+      </div>
+      <div class="steps">
+        <div class="step"><h3><span lang="en">Turn on Hermes' API server</span><span lang="it">Accendi l'API server di Hermes</span></h3>
+          <p><span lang="en">Iris talks to the API server built into Hermes Agent. The </span><span lang="it">Iris parla con l'API server di Hermes Agent. La </span><a href="https://github.com/Mark9712Seto/IrisNotch/blob/main/docs/hermes-setup.md"><span lang="en">setup guide</span><span lang="it">guida</span></a><span lang="en"> takes a couple of minutes.</span><span lang="it"> richiede un paio di minuti.</span></p></div>
+        <div class="step"><h3><span lang="en">Install Iris Notch</span><span lang="it">Installa Iris Notch</span></h3>
+          <p><span lang="en">Download the installer from the </span><span lang="it">Scarica l'installer dall'</span><a href="https://github.com/Mark9712Seto/IrisNotch/releases/latest"><span lang="en">latest release</span><span lang="it">ultima versione</span></a><span lang="en">. It isn't code-signed yet, so SmartScreen will ask: More info → Run anyway.</span><span lang="it">. Non è ancora firmato, quindi SmartScreen chiede conferma: Ulteriori informazioni → Esegui comunque.</span></p></div>
+        <div class="step"><h3><span lang="en">Connect and say hi</span><span lang="it">Collegala e salutala</span></h3>
+          <p><span lang="en">The settings open on first start: enter the Hermes address and key, press Test, Save. Then hover the notch.</span><span lang="it">Al primo avvio si aprono le impostazioni: metti indirizzo e chiave di Hermes, premi Test e Salva. Poi passa sopra la tacca.</span></p></div>
+      </div>
+      <p style="margin-top:22px;color:var(--muted)"><span lang="en">Requirements: Windows 10 or 11 and a Hermes Agent. A GPU makes local speech-to-text faster; the local voice works on any CPU. The interface is in Italian for now.</span><span lang="it">Requisiti: Windows 10 o 11 e un Hermes Agent. Una scheda video rende più veloce la trascrizione locale; la voce locale va su qualsiasi processore.</span></p>
+    </div>
+  </section>
+
+  <!-- IRIS DIAL -->
+  <section id="dial">
+    <div class="wrap dial">
+      <div>
+        <span class="eyebrow"><span lang="en">Also from Variety Project</span><span lang="it">Sempre da Variety Project</span></span>
+        <h2 style="font-size:clamp(28px,4.4vw,42px);margin:12px 0 14px">Iris Dial</h2>
+        <p style="color:var(--muted);font-size:17px"><span lang="en">The same eyes on your wrist. Iris Dial is a companion app for the Amazfit Balance 2 (Zepp OS): dictate a question, watch the eyes think, read the reply, and continue the chat — through your phone, straight to your own Hermes.</span><span lang="it">Gli stessi occhi al polso. Iris Dial è un'app per Amazfit Balance 2 (Zepp OS): detti una domanda, guardi gli occhi pensare, leggi la risposta e continui la chat, passando dal telefono, dritto al tuo Hermes.</span></p>
+        <div class="btns" style="margin-top:22px"><a class="btn" href="https://github.com/Mark9712Seto/IrisDial"><span lang="en">Iris Dial on GitHub →</span><span lang="it">Iris Dial su GitHub →</span></a></div>
+      </div>
+      <img src="images/iris-dial.png" alt="Iris Dial on an Amazfit Balance 2" loading="lazy">
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <a class="brand" href="#"><img src="images/logo.svg" alt="" style="width:28px">Iris Notch</a>
+    <span>© 2026 Variety Project</span>
+    <nav>
+      <a href="https://github.com/Mark9712Seto/IrisNotch">GitHub</a>
+      <a href="https://github.com/Mark9712Seto/IrisNotch/blob/main/LICENSE"><span lang="en">License</span><span lang="it">Licenza</span></a>
+      <a href="https://github.com/Mark9712Seto/IrisNotch/blob/main/PRIVACY.md">Privacy</a>
+      <a href="https://github.com/Mark9712Seto/IrisNotch/blob/main/THIRD-PARTY.md"><span lang="en">Credits</span><span lang="it">Crediti</span></a>
+      <a href="https://github.com/Mark9712Seto/IrisNotch/blob/main/SECURITY.md"><span lang="en">Security</span><span lang="it">Sicurezza</span></a>
+    </nav>
+    <p><span lang="en">Free to use, study, modify and share for non-commercial purposes under the PolyForm Noncommercial License 1.0.0; selling it or using it in a paid product needs written permission. Iris Notch is an independent project, not affiliated with Nous Research, Piper or Amazfit/Zepp.</span><span lang="it">Gratis da usare, studiare, modificare e condividere per scopi non commerciali, con la licenza PolyForm Noncommercial 1.0.0; venderlo o usarlo in un prodotto a pagamento richiede un permesso scritto. Iris Notch è un progetto indipendente, non legato a Nous Research, Piper o Amazfit/Zepp.</span></p>
+  </div>
+</footer>
+
+<script src="eyes.js"></script>
+<script src="site.js"></script>
+<script>
+(function () {
+  const C = Iris.EYE_COLOR;
+  // hero: gli stati uno dopo l'altro, come durante una richiesta vera
+  const heroEl = document.getElementById("heroNotch"), cap = document.getElementById("heroCap");
+  const hero = Site.notch(heroEl, { autoEggs: false });
+  const T = {
+    idle: ["Waiting for you", "blinks, looks around, follows your mouse", "Ti aspetta", "sbatte le palpebre, si guarda intorno, segue il mouse"],
+    listening: ["Listening", "hold a shortcut and talk", "Ti ascolta", "tieni premuta la scorciatoia e parla"],
+    thinking: ["Thinking", "your Hermes agent is working on it", "Ci pensa", "il tuo agente Hermes ci sta lavorando"],
+    tool: ["Using a tool", "mail, calendar, home, web…", "Usa uno strumento", "posta, calendario, casa, web…"],
+    replying: ["Answering", "word by word, out loud if you like", "Risponde", "parola per parola, anche a voce"],
+    approval: ["Needs your OK", "allow once or deny, from the island", "Chiede il via libera", "una volta o nega, dall'isola"],
+    done: ["Done", "", "Fatto", ""],
+    egg: ["…and a bit of personality", "click the eyes for a surprise", "…e un po' di carattere", "clicca gli occhi per una sorpresa"],
+  };
+  const seq = [["idle", 3200], ["listening", 2600], ["thinking", 2800], ["tool", 2600], ["replying", 2800], ["approval", 2800], ["done", 2400], ["egg", 6500]];
+  const EGGS = ["palloncino", "farfalla", "occhiali", "dvd", "bolle", "stella", "gattino"];
+  let i = 0, eggN = 0, cur = "idle", timer = null;
+  function label(k) {
+    const t = T[k], it = Site.lang() === "it";
+    cap.style.opacity = 0;
+    setTimeout(() => { cap.innerHTML = `<b style="color:${k === "egg" ? "var(--fg)" : C[k]}">${it ? t[2] : t[0]}</b><span>${it ? t[3] : t[1]}</span>`; cap.style.opacity = 1; }, 220);
+  }
+  function step() {
+    const [k, ms] = seq[i++ % seq.length]; cur = k; label(k);
+    if (k === "egg") { hero.setState("idle"); hero.playEgg(EGGS[eggN++ % EGGS.length]); } else hero.setState(k);
+    timer = setTimeout(step, ms);
+  }
+  document.addEventListener("iris-lang", () => label(cur));
+  setInterval(() => hero.setLevel && hero.setLevel(0.3 + Math.abs(Math.sin(performance.now() / 180)) * 0.6), 70);
+  heroEl.addEventListener("click", () => { clearTimeout(timer); cur = "egg"; label("egg"); hero.setState("idle"); hero.playEgg(EGGS[eggN++ % EGGS.length]); timer = setTimeout(step, 6500); });
+  // gli occhi del titolo guardano il mouse
+  addEventListener("mousemove", (e) => { if (cur !== "idle") return; const r = heroEl.getBoundingClientRect(); hero.lookAt(Math.max(-1, Math.min(1, (e.clientX - r.left - r.width / 2) / 500)), Math.max(-1, Math.min(1, (e.clientY - r.top - r.height / 2) / 400))); });
+  if (Site.reduce) label("idle"); else step();
+
+  // griglia degli stati
+  const ST = [
+    ["listening", "Listening", "while you hold the shortcut", "Ascolta", "mentre tieni premuto per parlare"],
+    ["thinking", "Thinking", "the request reached the agent", "Pensa", "la richiesta è arrivata all'agente"],
+    ["tool", "Using a tool", "mail, calendar, terminal…", "Usa uno strumento", "posta, calendario, terminale…"],
+    ["replying", "Answering", "while it writes and speaks", "Risponde", "mentre scrive e parla"],
+    ["approval", "Needs approval", "it wants your OK", "Via libera", "vuole il tuo permesso"],
+    ["done", "Done", "just finished", "Fatto", "ha appena finito"],
+    ["error", "Error", "something went wrong", "Errore", "qualcosa è andato storto"],
+    ["sleep", "Asleep", "Hermes can't be reached", "Dorme", "Hermes non risponde"],
+  ];
+  const grid = document.getElementById("statesGrid");
+  ST.forEach(([s, en, enD, it, itD]) => {
+    const c = document.createElement("div"); c.className = "st";
+    c.innerHTML = `<div></div><div class="lbl"><b><span class="dot" style="background:${C[s]}"></span><span lang="en">${en}</span><span lang="it">${it}</span></b><small><span lang="en">${enD}</span><span lang="it">${itD}</span></small></div>`;
+    grid.appendChild(c);
+    const el = c.firstChild, eyes = Site.notch(el, { idleLife: false, autoEggs: false });
+    const start = () => { eyes.setState("idle"); setTimeout(() => eyes.setState(s), 60); };
+    start(); el.addEventListener("click", start);
+    if ((s === "done" || s === "error") && !Site.reduce) setInterval(start, 3200);
+    if (s === "listening") setInterval(() => eyes.setLevel && eyes.setLevel(0.3 + Math.abs(Math.sin(performance.now() / 200)) * 0.6), 70);
+  });
+
+  // qualche easter egg
+  const EG = [
+    ["dvd", "DVD screensaver", "Logo del DVD", "when it's bored", "quando si annoia"],
+    ["farfalla", "Butterfly", "Farfalla", "when it's bored", "quando si annoia"],
+    ["occhiali", "Sunglasses", "Occhiali da sole", "when it's bored", "quando si annoia"],
+    ["pacman", "Pac-Man", "Pac-Man", "when it's bored", "quando si annoia"],
+    ["lanterne", "Lunar New Year", "Capodanno cinese", "lunar calendar", "calendario lunare"],
+    ["sakura", "Hanami", "Hanami", "late March – early April", "fine marzo – inizio aprile"],
+    ["spada", "Star Wars Day", "Star Wars Day", "May the 4th", "4 maggio"],
+    ["fantasma", "Halloween", "Halloween", "Oct 25 – Nov 2", "25 ottobre – 2 novembre"],
+    ["neve", "Christmas", "Natale", "December", "dicembre"],
+    ["torta", "Your birthday", "Il tuo compleanno", "the day you set", "il giorno che imposti"],
+    ["occhiaie", "Deep night", "Notte fonda", "opening it after 00:30", "aprendola dopo mezzanotte e mezza"],
+    ["caffe", "Good morning", "Buongiorno", "early mornings", "la mattina presto"],
+  ];
+  const eg = document.getElementById("eggsGrid");
+  EG.forEach(([id, en, it, wen, wit], n) => {
+    if (!Iris.EGGS[id]) return;
+    const c = document.createElement("div"); c.className = "egg";
+    c.innerHTML = `<div></div><b><span lang="en">${en}</span><span lang="it">${it}</span></b><small><span lang="en">${wen}</span><span lang="it">${wit}</span></small>`;
+    eg.appendChild(c);
+    const el = c.firstChild, eyes = Site.notch(el, { idleLife: false, autoEggs: false });
+    Site.loopEgg(eyes, el, id, 300 + (n % 4) * 400);
+  });
+})();
+</script>
+</body>
+</html>
