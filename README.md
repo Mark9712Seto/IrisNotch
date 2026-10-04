@@ -103,7 +103,9 @@ The [**live demo**](https://mark9712seto.github.io/IrisNotch/demo.html) runs the
 
 ## Install
 
-1. **Turn on Hermes' API server**: see [docs/hermes-setup.md](docs/hermes-setup.md).
+Full guide: [**docs/install.md**](docs/install.md) ([italiano](docs/installazione.md)). In short:
+
+1. **Turn on Hermes' API server**: see [docs/hermes-setup.md](docs/hermes-setup.md) ([italiano](docs/hermes-setup.it.md)).
 2. **Download the installer** from the [latest release](../../releases/latest) and run it. The app isn't code-signed yet, so Windows SmartScreen will warn you: **More info → Run anyway**.
 3. On first start the settings open: enter the Hermes address (for example `http://your-hermes-host:8642`) and the API key, press **Test**, then **Save**.
 
@@ -131,7 +133,7 @@ Full details in [PRIVACY.md](PRIVACY.md). To report a vulnerability, see [SECURI
 
 <img src="docs/images/iris-dial.png" alt="Iris Dial on an Amazfit Balance 2">
 
-The same eyes on your wrist. [**Iris Dial**](https://github.com/Mark9712Seto/IrisDial) is a companion app for the Amazfit Balance 2 (Zepp OS): dictate a question, watch the eyes think, read the reply, and continue the chat, through your phone, straight to your own Hermes.
+The same eyes on your wrist. [**Iris Dial**](https://mark9712seto.github.io/IrisDial/) ([GitHub](https://github.com/Mark9712Seto/IrisDial)) is a companion app for the Amazfit Balance 2 (Zepp OS): dictate a question, watch the eyes think, read the reply, and continue the chat, through your phone, straight to your own Hermes.
 
 ## Build from source
 
@@ -172,7 +174,7 @@ Free to **use, study, modify and share for any non-commercial purpose**, under t
 - **Riprendi** le sessioni nate altrove (Telegram, terminale…) e dai il **via libera** alle azioni, una volta o nega.
 - **Ha carattere**: più di 50 animazioni a sorpresa, feste di tutto il mondo, saluti secondo l'ora, e puoi aggiungerne di tue con un file JSON.
 
-[**Prova la demo**](https://mark9712seto.github.io/IrisNotch/demo.html) · [Sito](https://mark9712seto.github.io/IrisNotch/) · [Scarica](../../releases/latest) · [Guida all'installazione](docs/installazione.md)
+[**Prova la demo**](https://mark9712seto.github.io/IrisNotch/demo.html) · [Sito](https://mark9712seto.github.io/IrisNotch/) · [Scarica](../../releases/latest) · [Guida all'installazione](docs/installazione.md) · [Accendere l'API server di Hermes](docs/hermes-setup.it.md)
 
 **Privacy**: niente account, statistiche o pubblicità; le chiavi stanno nel Gestore credenziali di Windows; le conversazioni vanno solo al tuo server Hermes. Dettagli in [PRIVACY.md](PRIVACY.md).
 

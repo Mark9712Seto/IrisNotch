@@ -1,5 +1,7 @@
 # Turning on the Hermes API server
 
+*[Leggi in italiano](hermes-setup.it.md)*
+
 Iris talks to Hermes through its **API server** (default port `8642`). You do this once, on the machine where Hermes runs.
 
 ## 1. Add a key to Hermes' `.env`

@@ -1,12 +1,12 @@
 # Installare e usare Iris Notch (versione 0.1.x)
 
+*[Read in English](install.md)*
+
 ## 1. Scaricare il programma
 
-1. Apri il repository su GitHub → **Actions** → l'ultima esecuzione verde di **Build**.
-2. In fondo alla pagina, sotto **Artifacts**, scarica **Iris-Notch-Windows** (è uno zip).
-3. Dentro ci sono due file:
-   - `Iris Notch_0.1.x_x64-setup.exe`: l'installer (il numero cambia a ogni build: in fondo alle impostazioni vedi quale hai installato). Installa solo per il tuo utente, non chiede i permessi di amministratore;
-   - `iris-volto.exe`: il programma da solo, senza installazione, utile per una prova veloce.
+1. Apri la pagina delle **Release** del repository e scegli l'ultima versione.
+2. Scarica `Iris Notch_0.1.x_x64-setup.exe` (il numero è la versione: in fondo alle impostazioni vedi quale hai installato) e aprilo. Installa solo per il tuo utente, non chiede i permessi di amministratore.
+3. Per provare una build più nuova di una Release: **Actions** → l'ultima esecuzione verde di **Build** → in fondo, sotto **Artifacts**, **Iris-Notch-Windows** (uno zip con l'installer e `iris-volto.exe`, il programma da solo senza installazione).
 
 > ⚠️ **Windows SmartScreen** mostrerà "Windows ha protetto il PC", perché il programma non è firmato. Clicca **Ulteriori informazioni → Esegui comunque**. Capita a tutti i programmi non firmati; firmarlo costa un certificato a pagamento.
 
@@ -21,7 +21,7 @@ L'isola compare in alto al centro dello schermo e, finché Hermes non è configu
 | Campo | Cosa mettere |
 |---|---|
 | Indirizzo | l'indirizzo dell'API server di Hermes, per esempio `http://<indirizzo-di-hermes>:8642` |
-| Chiave API | la chiave che hai messo in `API_SERVER_KEY` (vedi [hermes-setup.md](hermes-setup.md)) |
+| Chiave API | la chiave che hai messo in `API_SERVER_KEY` (vedi [hermes-setup.it.md](hermes-setup.it.md)) |
 
 Premi **Test**, il pulsante accanto alla chiave:
 
@@ -131,7 +131,7 @@ Il titolo in alto apre il menu:
 
 ## Problemi noti
 
-- **Trascinamento:** dalla 0.1.2 la finestra la muove il programma, per togliere le scie quando la bolla si trascina veloce o tra due schermi. Se vedi ancora artefatti, segnalalo con una foto.
+- **Trascinamento:** dalla 0.1.2 la finestra la muove il programma, per togliere le scie quando la bolla si trascina veloce o tra due schermi. Se vedi ancora artefatti, segnalalo aprendo una *issue* su GitHub, con una foto.
 - **Trascrizione locale:** finora provata poco con un modello vero. Se non va, guarda **Debug e prove → Ultimi errori**.
 - **Scorciatoie:** si scrivono a mano nelle impostazioni (per esempio `Ctrl+Shift+K`). Se una scorciatoia è già usata da un altro programma, Windows non la assegna.
-- **Se qualcosa non va:** accendi la **modalità debug**, rifai la cosa e mandami **Ultimi errori** (il log non contiene mai le chiavi).
+- **Se qualcosa non va:** accendi la **modalità debug**, rifai la cosa e apri una *issue* su GitHub allegando **Ultimi errori** (il log non contiene mai le chiavi).
