@@ -4,6 +4,7 @@
   const Iris = window.Iris;
   const B = Iris.backend;
   const $ = (id) => document.getElementById(id);
+  const T = Iris.i18n.T;
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
   /* ---------- icone ---------- */
@@ -47,6 +48,9 @@
   let pinned = false, expanded = false, reachable = true;
   let voiceMode = null;         // null | "rec" | "busy" | "preview"
   let voiceFromPtt = false;
+  let voiceCompact = false;     // premi e parla a isola chiusa: tutto nella tacca, senza aprire la chat
+  let mini = null;              // tacca allungata: { kind: "preview" | "reply", auto }
+  let compactRun = false, miniText = "", lastSent = "";
   let doneTimer = null;
 
   const LABEL = {
@@ -59,7 +63,7 @@
     vision: "guardo un'immagine", delegation: "chiedo a un aiutante", session_search: "cerco nelle conversazioni", skills: "abilità", cronjob: "lavori programmati",
     actual_budget: "budget",
   };
-  const toolName = (t) => TOOL_NAMES[t] || TOOL_NAMES[String(t).split(/[._]/)[0]] || t;
+  const toolName = (t) => T(TOOL_NAMES[t] || TOOL_NAMES[String(t).split(/[._]/)[0]] || String(t));
 
   // modalità debug: nel log tutte le azioni (gli errori ci vanno sempre)
   const dlog = (msg) => { if (settings && settings.debug && B.log) B.log("debug", msg); };
@@ -68,9 +72,9 @@
     eyes.setState(s);
     isl.dataset.state = s;
     document.documentElement.style.setProperty("--accent", Iris.EYE_COLOR[s] || Iris.EYE_COLOR.idle);
-    const label = text != null ? text : LABEL[s] || "";
+    const label = text != null ? text : T(LABEL[s] || "");
     $("status").textContent = label;
-    isl.classList.toggle("active", !!label);
+    isl.classList.toggle("active", !!label && !mini);
     isl.classList.toggle("attn", s === "approval");
     if (!expanded && !drag) place(true);
   }
@@ -111,11 +115,21 @@
     const cs = getComputedStyle(el); measureCtx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
     return Math.ceil(measureCtx.measureText(el.textContent).width);
   }
+  // tacca allungata della voce compatta: larga quanto un'anteprima, alta quanto serve al contenuto
+  function miniSize() {
+    const b = border(), h0 = AH + 2 * b;
+    return { w: cl(440, AW + 2 * b, scr.w - 16), h: h0 + (mini.kind === "reply" ? 132 : mini.kind === "approval" ? 160 : mini.auto ? 86 : 98) };
+  }
   function collapsedRect() {
+    if (mini) {
+      const m = miniSize(), cx = I().x != null ? I().x : scr.w / 2;
+      if (bubble()) { const cy = I().y != null ? I().y : scr.wy + scr.wh - 60; return { x: cl(cx - m.w / 2, 8, scr.w - m.w - 8), y: cl(cy - 20, 0, scr.wy + scr.wh - m.h - 8), w: m.w, h: m.h }; }
+      return { x: cl(cx - m.w / 2, 0, scr.w - m.w), y: 0, w: m.w, h: m.h };
+    }
     const b = border(), h = AH + 2 * b;
     // con una scritta ("Sto pensando…") la tacca si allarga quanto basta, la scritta parte subito dopo gli occhi
-    const P = b + 10; // con la scritta: stesso spazio prima degli occhi e dopo la scritta
-    const w = isl.classList.contains("active") ? cl(2 * P + 50 + statusWidth() + 4, AW + 2 * b, 380) : AW + 2 * b;
+    const P = b + 16; // con la scritta: margine prima degli occhi e dopo la scritta (un po' di respiro)
+    const w = isl.classList.contains("active") ? cl(2 * P + 62 + statusWidth() + 4, AW + 2 * b, 420) : AW + 2 * b;
     const cx = I().x != null ? I().x : scr.w / 2;
     if (bubble()) {
       const cy = I().y != null ? I().y : scr.wy + scr.wh - 60;
@@ -163,10 +177,11 @@
     else { e.left = b + "px"; e.top = b + "px"; e.borderRadius = bubble() ? `${ri}px` : `0 0 ${ri}px ${ri}px`; }
     // con la scritta ("Sto pensando…") gli occhi scivolano a sinistra: l'occhio sinistro parte a P dal bordo
     // (dentro l'area è a 46 px), la scritta subito dopo i puntini, e a destra resta lo stesso P
-    const P = b + 10;
+    const P = b + 16;
     if (!expanded && isl.classList.contains("active")) e.left = P - 46 + "px";
-    $("bar").style.height = h + "px";
-    $("status").style.left = P + 50 + "px"; $("status").style.right = "0"; $("status").style.lineHeight = h + "px";
+    if (!expanded && mini) { e.left = (miniSize().w - AW) / 2 + "px"; isl.style.borderRadius = bubble() ? "24px" : "0 0 24px 24px"; }
+    $("bar").style.height = h + "px"; isl.style.setProperty("--barh", h + "px");
+    $("status").style.left = P + 62 + "px"; // spazio tra gli occhi (e i puntini) e la scritta $("status").style.right = "0"; $("status").style.lineHeight = h + "px";
   }
   /* La finestra di Windows resta grande quanto l'isola aperta e non si ridimensiona aprendo e chiudendo
      (ridimensionarla a fine animazione faceva sfarfallare gli occhi). La parte fuori dall'isola lascia
@@ -197,6 +212,11 @@
     stopCountdown(); expanded = true;
     isl.classList.add("expanded"); isl.classList.remove("collapsed"); place(true);
     if (dorme) { dorme = false; eyes.stopEgg(); }
+    if (mini) {
+      const wasPreview = voiceMode === "mini";
+      hideMini(true);
+      if (wasPreview) { voiceMode = "preview"; voiceCompact = false; const v = $("voice"); v.classList.add("show", "preview"); $("vTitle").textContent = T("Ho capito questo"); $("vHint").textContent = T("correggi se serve"); $("vText").value = miniText; }
+    }
     animazioneOra();
     setTimeout(autoGrow, 520);
     if (!session) loadInitialSession();
@@ -216,7 +236,7 @@
     if (ms >= 1000) { c.style.transitionDuration = ms + "ms"; c.classList.add("run"); requestAnimationFrame(() => requestAnimationFrame(() => c.classList.add("go"))); }
     leaveT = setTimeout(() => { stopCountdown(); collapse(false); }, ms);
   }
-  function onEnter() { stopCountdown(); clearTimeout(hoverT); if (!drag && !expanded && I().open !== "click") hoverT = setTimeout(expand, I().openDelay != null ? I().openDelay : 1000); }
+  function onEnter() { stopCountdown(); clearTimeout(hoverT); if (mini) return; /* tacca allungata: si apre solo cliccando sugli occhi */ if (!drag && !expanded && I().open !== "click") hoverT = setTimeout(expand, I().openDelay != null ? I().openDelay : 1000); }
   function onLeave() { clearTimeout(hoverT); if (!drag && expanded && !blocked()) { stopCountdown(); startCountdown(); } }
   // nel browser bastano gli eventi del mouse; dentro Tauri entrata e uscita le decide hitTest()
   if (!Iris.isTauri) { isl.addEventListener("mouseenter", onEnter); isl.addEventListener("mouseleave", onLeave); }
@@ -233,7 +253,7 @@
     if (e.button !== 0) return;
     const onEyes = $("eyes").contains(e.target);
     if (expanded && !onEyes) return;
-    const d = (drag = { on: false, onEyes, sx: e.clientX, sy: e.clientY });
+    const d = (drag = { on: false, onEyes, inMini: $("mini").contains(e.target), sx: e.clientX, sy: e.clientY });
     try { isl.setPointerCapture(e.pointerId); } catch (err) {}
     d.t = setTimeout(() => beginDrag(e), 280);
   });
@@ -308,6 +328,9 @@
         if (mode !== I().mode) { I().mode = mode; isl.classList.toggle("bubble", bubble()); shape(); }
         c = collapsedRect();
       }
+      const tNow = performance.now();
+      if (d.last && !d.keep) { const vel = Math.hypot(c.x - d.last.x, c.y - d.last.y) / Math.max(1, tNow - d.last.t) * 1000; if (vel > 2200 && Iris.EGGS.vento && !(eyes.egg && eyes.egg.name === "vento")) eyes.playEgg("vento"); }
+      d.last = { x: c.x, y: c.y, t: tNow };
       cur = c;
       if (sc.name !== scr.name) { scr = sc; await coverScreen(c, true); } // passata su un altro schermo
       else setIsland(c, false);
@@ -359,6 +382,7 @@
           if (d.keep) keepWhereDropped();
           isl.classList.toggle("bubble", bubble()); shape();
           await springTo(expanded ? expandedRect() : collapsedRect());
+          if (!expanded && Iris.EGGS.atterraggio) eyes.playEgg("atterraggio");
           try { await place(false); } // stesso angolo: la finestra si restringe attorno all'isola senza lampi
           catch (err) { dlog("trascinamento: " + err); }
           save();
@@ -386,6 +410,8 @@
     }
     if (e.type !== "pointerup") return;
     // un clic, non un trascinamento
+    if (!expanded && dorme) { dorme = false; ultimoMoto = Date.now(); clearTimeout(hoverT); eyes.stopEgg(); svegliati("risveglio"); return; } // il primo clic lo sveglia
+    if (!expanded && mini && d.inMini) return; // sul testo dell'anteprima o della risposta un clic non apre la chat
     if (!expanded) { clearTimeout(hoverT); expand(); }
     else if (d.onEyes) eyes.poke();
   }
@@ -419,7 +445,7 @@
   const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
   isl.addEventListener("pointerup", endDrag);
   isl.addEventListener("pointercancel", endDrag);
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape") { if ($("settings").classList.contains("show")) closeSettings(); else if (voiceMode) cancelVoice(); else collapse(true); } });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") { if ($("settings").classList.contains("show")) closeSettings(); else if (voiceMode === "mini") compactCancel(); else if (voiceMode) cancelVoice(); else collapse(true); } });
   $("pinBtn").onclick = () => { pinned = !pinned; $("pinBtn").classList.toggle("on", pinned); };
 
   /* gli occhi seguono il mouse (anche fuori dalla finestra: la posizione la dà il programma) */
@@ -446,9 +472,10 @@
     if (ultimoPunto) {
       const v = Math.hypot(x - ultimoPunto.x, y - ultimoPunto.y) / Math.max(1, now - ultimoPunto.t) * 1000; // px al secondo
       if (v > 2) {
-        ultimoMoto = now;
-        if (dorme) { dorme = false; eyes.stopEgg(); eyes.setState("surprised"); setTimeout(() => eyes.state === "surprised" && !drag && eyes.setState("idle"), 900); dlog("occhi: svegliato dal mouse"); }
+        const via = now - ultimoMoto; ultimoMoto = now;
+        if (dorme) { dorme = false; eyes.stopEgg(); svegliati(via > 30 * 60000 ? "bentornato" : null); dlog(`occhi: svegliato dal mouse dopo ${Math.round(via / 60000)} minuti`); }
       }
+      carezza(x, y, v, now);
       const libero = !expanded && !drag && eyes.state === "idle" && !eyes.egg;
       if (v > 4500) velociDiFila++; else if (v < 1500) velociDiFila = Math.max(0, velociDiFila - 1);
       if (libero && now > prossimaReazione && velociDiFila >= 3) {
@@ -460,6 +487,30 @@
       if (dorme && !eyes.egg && libero) eyes.playEgg("pisolino"); // il pisolino continua finché non torni
     }
     ultimoPunto = { x, y, t: now };
+  }
+  // al risveglio dal pisolino: una delle animazioni di risveglio a caso (oppure quella chiesta)
+  function svegliati(nome) {
+    const lista = (Iris.NUOVE && Iris.NUOVE.risveglio || []).filter((id) => Iris.EGGS[id]);
+    const id = nome && Iris.EGGS[nome] ? nome : lista[Math.floor(Math.random() * lista.length)];
+    if (id) eyes.playEgg(id); else { eyes.setState("surprised"); setTimeout(() => eyes.state === "surprised" && !drag && eyes.setState("idle"), 900); }
+  }
+  /* Carezza: il mouse passa piano avanti e indietro sopra l'isola chiusa (almeno 3 cambi di direzione in poco più
+     di un secondo). Fa le fusa invece di aprirsi. */
+  let carezzaDir = 0, carezzaCambi = [], carezzaX = null, prossimaCarezza = 0;
+  function carezza(x, y, v, now) {
+    if (expanded || drag || now < prossimaCarezza) return;
+    const r = collapsedRect();
+    if (x < r.x || x > r.x + r.w || y < r.y || y > r.y + r.h) { carezzaCambi = []; carezzaX = null; return; }
+    if (carezzaX != null && Math.abs(x - carezzaX) > 3) {
+      const dir = Math.sign(x - carezzaX);
+      if (carezzaDir && dir !== carezzaDir && v > 40 && v < 2500) carezzaCambi.push(now);
+      carezzaDir = dir;
+    }
+    carezzaX = x; carezzaCambi = carezzaCambi.filter((t) => now - t < 1300);
+    if (carezzaCambi.length >= 3 && eyes.state === "idle" && !eyes.egg) {
+      clearTimeout(hoverT); carezzaCambi = []; prossimaCarezza = now + 20000;
+      eyes.playEgg("carezza"); dlog("occhi: carezza");
+    }
   }
   // aprendo l'isola, una volta per fascia oraria: occhiaie a notte fonda, assonnato all'alba, caffè, stiracchiata, sera
   let ultimaFascia = "", ultimaFasciaT = 0;
@@ -494,7 +545,7 @@
   /* ---------- sessioni ---------- */
   const ago = (ts) => {
     const d = Date.now() / 1000 - ts;
-    if (d < 60) return "ora"; if (d < 3600) return Math.round(d / 60) + " min"; if (d < 86400) return Math.round(d / 3600) + " h";
+    if (d < 60) return T("ora"); if (d < 3600) return Math.round(d / 60) + " min"; if (d < 86400) return Math.round(d / 3600) + " h";
     if (d < 7 * 86400) return ["dom", "lun", "mar", "mer", "gio", "ven", "sab"][new Date(ts * 1000).getDay()];
     return new Date(ts * 1000).toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit" });
   };
@@ -504,12 +555,12 @@
   function itemHtml(s, badge) {
     // ordine: puntina · provenienza · nome · quando · rinomina · elimina
     return `<div class="it ${session && s.id === session.id ? "cur" : ""}" data-id="${esc(s.id)}" role="button" tabindex="0">
-      <button class="rb pin ${isPinned(s) ? "on" : ""}" title="${isPinned(s) ? "Togli dalle fissate" : "Fissa in alto"}">${icon("pin")}</button>
-      ${badge ? `<span class="badge ${esc(s.source)}">${esc(SRC[s.source] || s.source)}</span>` : ""}
-      <span class="t"><b>${esc(s.title || s.preview || "Senza titolo")}</b>${s.title && s.preview ? `<small>${esc(s.preview)}</small>` : ""}</span>
+      <button class="rb pin ${isPinned(s) ? "on" : ""}" title="${T(isPinned(s) ? "Togli dalle fissate" : "Fissa in alto")}">${icon("pin")}</button>
+      ${badge ? `<span class="badge ${esc(s.source)}">${esc(T(SRC[s.source] || s.source))}</span>` : ""}
+      <span class="t"><b>${esc(s.title || s.preview || T("Senza titolo"))}</b>${s.title && s.preview ? `<small>${esc(s.preview)}</small>` : ""}</span>
       <span class="when">${ago(s.last_active || s.started_at || 0)}</span>
-      <button class="rb ren" title="Rinomina">${icon("edit")}</button>
-      <button class="rb del" title="Elimina">${icon("trash")}</button></div>`;
+      <button class="rb ren" title="${T("Rinomina")}">${icon("edit")}</button>
+      <button class="rb del" title="${T("Elimina")}">${icon("trash")}</button></div>`;
   }
   async function refreshSessions() {
     try { allSessions = await B.listSessions({ limit: 60 }); } catch (e) { allSessions = []; }
@@ -528,8 +579,8 @@
     const others = allSessions.filter((s) => !isPinned(s) && !isMine(s) && (!q || ((s.title || "") + " " + (s.preview || "")).toLowerCase().includes(q)));
     $("pinWrap").style.display = pinned.length ? "" : "none";
     $("menuPinned").innerHTML = pinned.map((s) => itemHtml(s, !isMine(s))).join("");
-    $("menuMine").innerHTML = mine.length ? mine.map((s) => itemHtml(s, false)).join("") : `<div class="empty">Ancora nessuna conversazione dall'isola.</div>`;
-    $("menuOthers").innerHTML = others.length ? others.map((s) => itemHtml(s, true)).join("") : `<div class="empty">Nessuna sessione trovata.</div>`;
+    $("menuMine").innerHTML = mine.length ? mine.map((s) => itemHtml(s, false)).join("") : `<div class="empty">${T("Ancora nessuna conversazione dall'isola.")}</div>`;
+    $("menuOthers").innerHTML = others.length ? others.map((s) => itemHtml(s, true)).join("") : `<div class="empty">${T("Nessuna sessione trovata.")}</div>`;
     document.querySelectorAll("#menu .it").forEach((b) => {
       const s = allSessions.find((x) => x.id === b.dataset.id);
       b.onclick = () => openSession(s);
@@ -562,7 +613,7 @@
       const s = allSessions.find((x) => x.id === id); if (s) s.title = title;
       if (session && session.id === id) { session.title = title; $("sessTitle").textContent = title; }
       renderMenu();
-    } catch (e) { setState("error", "Rinomina: " + String(e.message || e)); setTimeout(() => isl.dataset.state === "error" && setState("idle"), 3000); }
+    } catch (e) { setState("error", T("Rinomina: {e}", { e: String(e.message || e) })); setTimeout(() => isl.dataset.state === "error" && setState("idle"), 3000); }
   }
   // fissa in alto: lo salva Hermes (si vede anche nel pannello); se la versione di Hermes non lo sa fare, lo ricorda l'app
   async function togglePin(s) {
@@ -576,9 +627,9 @@
   function askDelete(row, s) {
     const btn = row.querySelector(".del");
     if (!btn.classList.contains("sure")) {
-      btn.classList.add("sure"); btn.innerHTML = icon("check"); btn.title = "Clicca di nuovo per eliminare (non si può annullare)";
+      btn.classList.add("sure"); btn.innerHTML = icon("check"); btn.title = T("Clicca di nuovo per eliminare (non si può annullare)");
       row.classList.add("ask");
-      btn._t = setTimeout(() => { btn.classList.remove("sure"); btn.innerHTML = icon("trash"); btn.title = "Elimina"; row.classList.remove("ask"); }, 3000);
+      btn._t = setTimeout(() => { btn.classList.remove("sure"); btn.innerHTML = icon("trash"); btn.title = T("Elimina"); row.classList.remove("ask"); }, 3000);
       return;
     }
     clearTimeout(btn._t);
@@ -587,7 +638,7 @@
         await B.deleteSession(s.id);
         allSessions = allSessions.filter((x) => x.id !== s.id); mineIds.delete(s.id); pinIds.delete(s.id); saveLocal();
         if (session && session.id === s.id) showHello();
-      } catch (err) { setState("error", "Eliminazione: " + String(err.message || err)); setTimeout(() => isl.dataset.state === "error" && setState("idle"), 3000); }
+      } catch (err) { setState("error", T("Eliminazione: {e}", { e: String(err.message || err) })); setTimeout(() => isl.dataset.state === "error" && setState("idle"), 3000); }
       renderMenu();
     })();
   }
@@ -621,13 +672,13 @@
     if (last && Date.now() / 1000 - (last.last_active || 0) < 6 * 3600) openSession(last); else showHello();
   }
   function showHello() {
-    session = null; $("sessTitle").textContent = "Nuova conversazione";
-    $("chat").innerHTML = `<div class="hello"><b>Ciao! Come posso aiutarti?</b>Scrivi qui sotto, oppure tieni premuto <b style="display:inline;font-size:inherit">${esc((settings && settings.shortcuts.ptt) || "la scorciatoia")}</b> e parla.</div>`;
+    session = null; $("sessTitle").textContent = T("Nuova conversazione");
+    $("chat").innerHTML = `<div class="hello"><b>${T("Ciao! Come posso aiutarti?")}</b>${T("Scrivi qui sotto, oppure tieni premuto {k} e parla.", { k: `<b style="display:inline;font-size:inherit">${esc((settings && settings.shortcuts.ptt) || T("la scorciatoia"))}</b>` })}</div>`;
   }
   function newSession() { closeMenu(); showHello(); $("input").focus(); }
   async function openSession(s) {
     closeMenu(); if (!s) return;
-    session = { id: s.id, title: s.title || s.preview || "Senza titolo" };
+    session = { id: s.id, title: s.title || s.preview || T("Senza titolo") };
     $("sessTitle").textContent = session.title;
     $("chat").innerHTML = "";
     const msgs = await B.getMessages(s.id);
@@ -656,9 +707,9 @@
   }
   function addActs(el) {
     const a = document.createElement("div"); a.className = "acts";
-    a.innerHTML = `<button data-a="speak">${icon("vol")}<span>Ascolta</span></button><button data-a="copy">${icon("copy")}<span>Copia</span></button>`;
+    a.innerHTML = `<button data-a="speak">${icon("vol")}<span>${T("Ascolta")}</span></button><button data-a="copy">${icon("copy")}<span>${T("Copia")}</span></button>`;
     a.querySelector('[data-a="speak"]').onclick = () => toggleSpeak(el);
-    a.querySelector('[data-a="copy"]').onclick = (e) => { navigator.clipboard && navigator.clipboard.writeText(el._text); flash(e.currentTarget.querySelector("span"), "Copiato"); };
+    a.querySelector('[data-a="copy"]').onclick = (e) => { navigator.clipboard && navigator.clipboard.writeText(el._text); flash(e.currentTarget.querySelector("span"), T("Copiato")); };
     el.appendChild(a);
   }
   function flash(span, txt) { const old = span.textContent; span.textContent = txt; setTimeout(() => (span.textContent = old), 1200); }
@@ -690,7 +741,7 @@
       if (acts.length <= 4) continue; // per nasconderne una sola non vale la pena
       const hidden = acts.slice(0, acts.length - 3);
       const fold = document.createElement("div"); fold.className = "act-fold" + (open ? " open" : "");
-      fold.innerHTML = `<button class="act-more"><span>${hidden.length === 1 ? "1 azione prima" : hidden.length + " azioni prima"}</span>${icon("right")}</button><div class="act-list"></div>`;
+      fold.innerHTML = `<button class="act-more"><span>${hidden.length === 1 ? T("1 azione prima") : T("{n} azioni prima", { n: hidden.length })}</span>${icon("right")}</button><div class="act-list"></div>`;
       chat.insertBefore(fold, acts[acts.length - 3]);
       hidden.forEach((a) => fold.lastChild.appendChild(a));
       fold.firstChild.onclick = () => fold.classList.toggle("open");
@@ -708,7 +759,7 @@
   let speaking = 0;
   function speakingEyes(on) {
     speaking = Math.max(0, speaking + (on ? 1 : -1));
-    if (speaking && !run && ["idle", "done", "replying"].includes(isl.dataset.state)) setState("replying", "Parlo…");
+    if (speaking && !run && ["idle", "done", "replying"].includes(isl.dataset.state)) setState("replying", T("Parlo…"));
     if (!speaking && !run && isl.dataset.state === "replying") setState("idle");
   }
   function speakingUI(el, on) {
@@ -727,13 +778,14 @@
   Iris.onVoiceError = (msg) => {
     if (B.log) B.log("errore", "voce: " + msg);
     if ($("settings").classList.contains("show")) { $("sTtsRes").className = "res err"; $("sTtsRes").textContent = msg; }
-    setState("error", "Voce: " + msg); setTimeout(() => isl.dataset.state === "error" && setState("idle"), 3500); };
-  function renderTtsBtn() { const on = settings.tts.auto; $("ttsBtn").classList.toggle("on", on); $("ttsBtn").innerHTML = icon(on ? "vol" : "voloff"); $("ttsBtn").title = on ? "Risposte a voce: attive" : "Risposte a voce: spente"; }
+    setState("error", T("Voce: {e}", { e: msg })); setTimeout(() => isl.dataset.state === "error" && setState("idle"), 3500); };
+  function renderTtsBtn() { const on = settings.tts.auto; $("ttsBtn").classList.toggle("on", on); $("ttsBtn").innerHTML = icon(on ? "vol" : "voloff"); $("ttsBtn").title = T(on ? "Risposte a voce: attive" : "Risposte a voce: spente"); }
   $("ttsBtn").onclick = async () => { settings.tts.auto = !settings.tts.auto; if (!settings.tts.auto) Iris.tts.stop(); renderTtsBtn(); await B.saveSettings(settings); warmVoice(true); };
 
   /* ---------- invio e eventi di Hermes ---------- */
   async function send(text) {
     text = text.trim(); if (!text || run) return;
+    lastSent = text;
     if (!session) {
       const s = await B.createSession();
       session = { id: s.id, title: text.slice(0, 48) }; $("sessTitle").textContent = session.title;
@@ -750,7 +802,7 @@
       setSendMode(true);
     } catch (e) { failRun(String(e)); }
   }
-  function setSendMode(running) { const b = $("sendBtn"); b.classList.toggle("stop", running); b.innerHTML = icon(running ? "stop" : "send"); b.title = running ? "Ferma" : "Invia"; }
+  function setSendMode(running) { const b = $("sendBtn"); b.classList.toggle("stop", running); b.innerHTML = icon(running ? "stop" : "send"); b.title = T(running ? "Ferma" : "Invia"); }
   $("sendBtn").onclick = () => { if (run) B.stop(run.id); else send($("input").value); };
   $("input").addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send($("input").value); } });
   // la casella cresce con il testo; la barra di scorrimento compare solo oltre le 4-5 righe
@@ -771,6 +823,7 @@
         if (!run.el && !(ev.delta || "").trim() && !run.text.slice(run.seg).trim()) { run.text += ev.delta || ""; break; }
         if (!run.el) { run.el = addMsg("assistant", ""); run.el.querySelector(".txt").classList.add("caret"); if (settings.tts.chime && !run.chimed) { Iris.tts.chime("reply"); run.chimed = true; } }
         run.text += ev.delta || "";
+        if (compactRun && !expanded && !settings.tts.auto) miniReply(run.text.trim());
         const part = run.text.slice(run.seg).trim(); run.el._text = part;
         run.el.querySelector(".txt").innerHTML = md(part); scrollDown();
         // risposte a voce: si comincia a leggere appena c'è una frase completa
@@ -783,14 +836,14 @@
       }
       case "tool.started":
         closeSegment();
-        run.tool = addAct(ev.tool, ev.preview); setState("tool", "Uso: " + toolName(ev.tool)); break;
+        run.tool = addAct(ev.tool, ev.preview); setState("tool", T("Uso: {t}", { t: toolName(ev.tool) })); break;
       case "tool.completed":
         if (run.tool) { run.tool.classList.add(ev.error ? "err" : "done"); run.tool = null; }
         if (isl.dataset.state === "tool") setState("thinking"); break;
-      case "subagent.start": setState("tool", "Chiedo a un aiutante…"); break;
+      case "subagent.start": setState("tool", T("Chiedo a un aiutante…")); break;
       case "approval.request": showApproval(ev); break;
       case "run.completed": finishRun(ev.output); break;
-      case "run.failed": case "run.interrupted": failRun(ev.error || "La richiesta non è andata a buon fine"); break;
+      case "run.failed": case "run.interrupted": failRun(ev.error || T("La richiesta non è andata a buon fine")); break;
       case "run.cancelled": endRun(); setState("idle"); break;
     }
   });
@@ -807,12 +860,23 @@
     if (run.el && run.seg === 0 && output) { run.el._text = output; run.el.querySelector(".txt").innerHTML = md(output); }
     if (run.el) run.el.querySelector(".txt").classList.remove("caret");
     const el = run.el, speech = run.speech, full = streamed ? run.text : output || ""; endRun(); setState("done");
+    if (compactRun) {
+      compactRun = false;
+      if (!expanded && !settings.tts.auto) { miniReply(full.trim() || output || ""); $("miniFoot").textContent = T("Clicca sugli occhi per aprire la chat"); clearTimeout(miniT);
+        // si richiude da sola dopo 8 secondi, ma non mentre ci tieni sopra il mouse
+        const chiudi = () => { if (expanded || !mini || mini.kind !== "reply") return; if (inside || isl.matches(":hover")) miniT = setTimeout(chiudi, 1500); else hideMini(); };
+        miniT = setTimeout(chiudi, 8000); }
+    }
     if (speech) speech.end(full);
     else if (el && settings.tts.auto) speakEl(el);
-    clearTimeout(doneTimer); doneTimer = setTimeout(() => { if (isl.dataset.state === "done") (speaking ? setState("replying", "Parlo…") : setState("idle")); }, 3000);
+    clearTimeout(doneTimer); doneTimer = setTimeout(() => {
+      if (isl.dataset.state === "done") (speaking ? setState("replying", T("Parlo…")) : setState("idle"));
+      if (!expanded && !drag && isl.dataset.state === "idle" && !eyes.egg && Iris.EGGS.posta) eyes.playEgg("posta"); // risposta arrivata a isola chiusa
+    }, 3000);
     scrollDown();
   }
   function failRun(msg) {
+    if (compactRun) { compactRun = false; if (mini) hideMini(); }
     endRun(); setState("error");
     const el = document.createElement("div"); el.className = "act err"; el.innerHTML = `${icon("alert")}<span>${esc(msg)}</span>`; $("chat").appendChild(el); scrollDown();
     clearTimeout(doneTimer); doneTimer = setTimeout(() => { if (isl.dataset.state === "error") setState(reachable ? "idle" : "sleep"); }, 4000);
@@ -821,15 +885,19 @@
 
   /* ---------- via libera ---------- */
   function showApproval(ev) {
-    $("apDesc").textContent = ev.description || "Iris vuole eseguire questa azione:";
+    $("apDesc").textContent = ev.description || T("Iris vuole eseguire questa azione:");
     $("apCmd").textContent = ev.command || ev.pattern_key || "";
     $("apCmd").style.display = $("apCmd").textContent ? "block" : "none";
-    $("approval").classList.add("show"); setState("approval");
-    Iris.tts.chime("attention"); expand(); scrollDown();
+    document.querySelector("#approval .ap-scroll").scrollTop = 0;
+    $("approval").classList.add("show");
+    Iris.tts.chime("attention");
+    if (compactRun && !expanded) miniApproval(ev); else { setState("approval"); expand(); }
+    scrollDown();
   }
-  function hideApproval() { $("approval").classList.remove("show"); }
+  function hideApproval() { $("approval").classList.remove("show"); if (mini && mini.kind === "approval") hideMini(); }
   async function decide(choice) {
     if (!run) return hideApproval();
+    if (mini && mini.kind === "approval") eyes.setState(choice === "deny" ? "sad" : "happy");
     hideApproval(); setState("thinking");
     await B.approve(run.id, choice);
   }
@@ -850,38 +918,136 @@
   async function startVoice(fromPtt) {
     if (voiceMode === "rec" || run) return;
     Iris.tts.stop();
-    voiceFromPtt = !!fromPtt; expand();
+    voiceFromPtt = !!fromPtt;
+    if (fromPtt && !expanded && settings.stt.compact !== false) {
+      // voce compatta: la tacca si allarga appena, con la scritta accanto agli occhi; la chat resta chiusa
+      if (mini) hideMini();
+      voiceCompact = true; voiceMode = "rec";
+      setState("listening");
+      try { await B.startRecording(); } catch (e) { voiceError(e); }
+      return;
+    }
+    voiceCompact = false; expand();
     voiceMode = "rec";
     const v = $("voice"); v.classList.add("show"); v.classList.remove("preview");
-    $("vTitle").textContent = "Ti ascolto…";
-    $("vHint").textContent = fromPtt ? "rilascia per finire" : "clicca di nuovo il microfono per finire";
+    $("vTitle").textContent = T("Ti ascolto…");
+    $("vHint").textContent = T(fromPtt ? "rilascia per finire" : "clicca di nuovo il microfono per finire");
     $("micBtn").classList.add("rec"); setState("listening");
     try { await B.startRecording(); } catch (e) { voiceError(e); }
   }
   async function stopVoice() {
     if (voiceMode !== "rec") return;
     voiceMode = "busy"; $("micBtn").classList.remove("rec"); eyes.setLevel(null);
-    $("vTitle").textContent = "Trascrivo…"; $("vHint").textContent = ""; setState("transcribing");
+    $("vTitle").textContent = T("Trascrivo…"); $("vHint").textContent = ""; setState("transcribing");
     try {
       const r = await B.stopRecording();
       const text = (r && r.text ? r.text : "").trim();
-      if (!text) { voiceError("Non ho sentito niente"); return; }
+      if (!text) { voiceError(T("Non ho sentito niente")); return; }
+      if (voiceCompact && !expanded) return miniPreview(text, !!settings.stt.sendWithoutPreview);
+      voiceCompact = false;
       if (settings.stt.sendWithoutPreview) { closeVoice(); return send(text); }
       voiceMode = "preview";
-      $("voice").classList.add("preview"); $("vTitle").textContent = "Ho capito questo"; $("vHint").textContent = "correggi se serve";
+      $("voice").classList.add("preview"); $("vTitle").textContent = T("Ho capito questo"); $("vHint").textContent = T("correggi se serve");
       $("vText").value = text; setState("idle");
       setTimeout(() => { $("vText").focus(); $("vText").setSelectionRange(text.length, text.length); }, 50);
     } catch (e) { voiceError(e); }
   }
   function voiceError(e) { closeVoice(); setState("error", String(e && e.message ? e.message : e)); setTimeout(() => { if (isl.dataset.state === "error") setState("idle"); }, 3000); }
-  function closeVoice() { voiceMode = null; $("voice").classList.remove("show", "preview"); $("micBtn").classList.remove("rec"); eyes.setLevel(null); }
+  function closeVoice() { voiceMode = null; voiceCompact = false; $("voice").classList.remove("show", "preview"); $("micBtn").classList.remove("rec"); eyes.setLevel(null); }
   function cancelVoice() { if (voiceMode === "rec") B.cancelRecording(); closeVoice(); setState("idle"); }
+  /* ---------- voce compatta: anteprima e risposta nella tacca allungata ---------- */
+  let miniT = null, keysT = null, redoT = null, keysOn = false;
+  function showMini(kind, auto) {
+    mini = { kind, auto: !!auto };
+    isl.classList.add("has-mini"); isl.classList.toggle("mini-auto", kind === "preview" && !!auto); isl.classList.toggle("mini-reply", kind === "reply"); isl.classList.toggle("mini-ap", kind === "approval");
+    clearTimeout(hoverT); // se il mouse era già sopra, la chat non si apre da sola
+    $("miniTxt").classList.remove("fade-top", "fade-bot", "code"); $("miniTxt").scrollTop = 0;
+    isl.classList.remove("active"); $("miniTxt").classList.remove("eaten"); $("miniFoot").textContent = "";
+    if (!expanded) place(true);
+  }
+  function hideMini(noPlace) {
+    clearTimeout(miniT); clearTimeout(keysT); clearTimeout(redoT); redoT = null;
+    if (keysOn) { keysOn = false; B.voiceKeys && B.voiceKeys(false); }
+    mini = null; isl.classList.remove("has-mini", "mini-auto", "mini-reply", "mini-ap");
+    if (!noPlace && !expanded) { const label = $("status").textContent; isl.classList.toggle("active", !!label); place(true); }
+  }
+  function miniPreview(text, auto) {
+    voiceMode = "mini"; miniText = text; setState("idle", "");
+    showMini("preview", auto);
+    $("miniTxt").textContent = text;
+    if (auto) {
+      // invia subito: la barra verde si svuota in 2 secondi, poi il testo viene mangiato e parte (Esc lo ferma)
+      $("miniFoot").textContent = T("Esc per fermarla prima che parta");
+      const bar = $("miniBar"); bar.style.transition = "none"; bar.style.width = "100%";
+      requestAnimationFrame(() => requestAnimationFrame(() => { bar.style.transition = "width 2.2s linear"; bar.style.width = "0%"; }));
+      miniT = setTimeout(compactSend, 2300);
+    } else {
+      $("miniKeys").innerHTML = T("{a} o un tocco della scorciatoia: manda · {b} annulla · tienila premuta per rifare", { a: "<kbd>" + esc(T("Invio")) + "</kbd>", b: "<kbd>Esc</kbd>" });
+    }
+    // Invio ed Esc presi in prestito per un po' (il focus è nel programma in cui stai lavorando)
+    if (B.voiceKeys) { keysOn = true; B.voiceKeys(true); keysT = setTimeout(() => { if (keysOn) { keysOn = false; B.voiceKeys(false); } }, 15000); }
+  }
+  function compactSend() {
+    if (voiceMode !== "mini") return;
+    voiceMode = "sending"; clearTimeout(miniT);
+    $("miniTxt").classList.add("eaten"); eyes.setState("surprised");
+    setTimeout(() => { voiceMode = null; voiceCompact = false; hideMini(); compactRun = true; send(miniText); }, 480);
+  }
+  function compactCancel() {
+    if (voiceMode !== "mini") return;
+    voiceMode = null; voiceCompact = false; hideMini();
+    setState("idle"); eyes.setState("sad"); setTimeout(() => eyes.state === "sad" && eyes.setState("idle"), 900);
+  }
+  // via libera nella tacca: descrizione in alto, comando sotto (scorre con la rotellina se è lungo),
+  // Invio = una volta, Esc = nega; per leggerlo per bene clicchi sugli occhi e si apre la scheda completa
+  function miniApproval(ev) {
+    const desc = ev.description || "", cmd = ev.command || ev.pattern_key || "";
+    showMini("approval"); setState("approval");
+    $("miniQ").textContent = cmd ? desc || T("Iris vuole eseguire questa azione:") : T("Mi serve il via libera");
+    const el = $("miniTxt"); el.textContent = cmd || desc; el.classList.toggle("code", !!cmd);
+    miniSfuma();
+    $("miniKeys").innerHTML = T("{a} una volta · {b} nega · clic sugli occhi per vedere tutto", { a: "<kbd>" + esc(T("Invio")) + "</kbd>", b: "<kbd>Esc</kbd>" });
+    if (B.voiceKeys) { keysOn = true; B.voiceKeys(true); keysT = setTimeout(() => { if (keysOn) { keysOn = false; B.voiceKeys(false); } }, 30000); }
+  }
+  const miniAp = () => mini && mini.kind === "approval";
+  // mentre scrive segue la fine del testo, a meno che tu non sia salito con la rotellina a rileggere
+  let miniSegui = true;
+  function miniReply(text) {
+    if (!mini || mini.kind !== "reply") { showMini("reply"); $("miniQ").textContent = T("Tu") + ": " + lastSent; miniSegui = true; }
+    const el = $("miniTxt"); el.innerHTML = md(text);
+    if (miniSegui) el.scrollTop = el.scrollHeight;
+    miniSfuma();
+  }
+  function miniSfuma() {
+    const el = $("miniTxt"), max = el.scrollHeight - el.clientHeight;
+    el.classList.toggle("fade-top", el.scrollTop > 2); el.classList.toggle("fade-bot", el.scrollTop < max - 2);
+  }
+  $("miniTxt").addEventListener("scroll", () => {
+    const el = $("miniTxt"); miniSegui = el.scrollTop >= el.scrollHeight - el.clientHeight - 4; miniSfuma();
+  });
+  $("miniTxt").addEventListener("wheel", (e) => { if (mini && mini.kind !== "preview") e.stopPropagation(); }, { passive: true });
+  $("miniOk").onclick = () => (miniAp() ? decide("once") : compactSend()); $("miniNo").onclick = () => (miniAp() ? decide("deny") : compactCancel());
+  ["miniOk", "miniNo"].forEach((id) => $(id).addEventListener("pointerdown", (e) => e.stopPropagation()));
+  if (B.onVoiceKey) B.onVoiceKey((k) => { if (miniAp()) decide(k === "enter" ? "once" : "deny"); else if (voiceMode === "mini") (k === "enter" ? compactSend() : compactCancel()); });
+  document.addEventListener("keydown", (e) => {
+    if (miniAp() && (e.key === "Enter" || e.key === "Escape")) { e.preventDefault(); e.stopImmediatePropagation(); decide(e.key === "Enter" ? "once" : "deny"); }
+    else if (voiceMode === "mini" && e.key === "Enter") { e.preventDefault(); compactSend(); }
+  }, true);
+
   $("micBtn").onclick = () => (voiceMode === "rec" ? stopVoice() : startVoice(false));
   $("vSend").onclick = () => { const t = $("vText").value; closeVoice(); send(t); };
   $("vCancel").onclick = cancelVoice;
   $("vRedo").onclick = () => { closeVoice(); startVoice(false); };
   $("vText").addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("vSend").click(); } });
-  B.onPtt((s) => { if (s === "pressed") startVoice(true); else if (s === "released" && voiceFromPtt) stopVoice(); });
+  B.onPtt((s) => {
+    if (miniAp()) return; // mentre aspetta il via libera la scorciatoia non fa partire un'altra domanda
+    if (voiceMode === "mini") {
+      if (s === "pressed") redoT = setTimeout(() => { redoT = null; voiceMode = null; hideMini(); startVoice(true); }, 300);
+      else if (redoT) { clearTimeout(redoT); redoT = null; compactSend(); }
+      return;
+    }
+    if (s === "pressed") startVoice(true); else if (s === "released" && voiceFromPtt) stopVoice();
+  });
   B.onOpen(() => (expanded ? collapse(true) : (expand(), setTimeout(() => $("input").focus(), 200))));
 
   /* ---------- impostazioni ---------- */
@@ -893,15 +1059,15 @@
   }
   function fillVoices() {
     const vs = Iris.tts.voices(), sel = $("sVoice");
-    const it = vs.filter((v) => /^it/i.test(v.lang)), rest = vs.filter((v) => !/^it/i.test(v.lang));
-    sel.innerHTML = `<option value="">Automatica (italiana)</option>` + [...it, ...rest].map((v) => `<option value="${esc(v.id)}">${esc(v.name)} · ${esc(v.lang)}</option>`).join("");
+    const re = Iris.lang === "en" ? /^en/i : /^it/i, it = vs.filter((v) => re.test(v.lang)), rest = vs.filter((v) => !re.test(v.lang));
+    sel.innerHTML = `<option value="">${T("Automatica (italiana)")}</option>` + [...it, ...rest].map((v) => `<option value="${esc(v.id)}">${esc(v.name)} · ${esc(v.lang)}</option>`).join("");
     sel.value = settings.tts.voice || "";
   }
   document.addEventListener("iris-voices", () => settings && fillVoices());
   async function refreshModel() {
     try {
       const m = await B.modelStatus();
-      $("sModelState").textContent = m.downloaded ? `Scaricato${m.gpu ? " · " + m.gpu : ""}` : "Non ancora scaricato";
+      $("sModelState").textContent = m.downloaded ? `${T("Scaricato")}${m.gpu ? " · " + m.gpu : ""}` : T("Non ancora scaricato");
       $("sModelState").className = "res" + (m.downloaded ? " ok" : "");
       $("sModelDl").style.display = m.downloaded ? "none" : "";
     } catch (e) { $("sModelState").textContent = String(e); }
@@ -916,21 +1082,24 @@
     // i 5 GB della vecchia voce Qwen3-TTS, se sono ancora sul disco
     const old = $("lOld");
     if (localState.old_qwen_mb > 50) {
-      old.innerHTML = `<b>C'è ancora la vecchia voce locale</b> (Qwen3-TTS): occupa ${(localState.old_qwen_mb / 1024).toFixed(1)} GB e non serve più.<div class="row2"><button class="btn ok" data-y>Elimina</button><button class="btn" data-n>Non ora</button></div>`;
+      old.innerHTML = `<b>${T("C'è ancora la vecchia voce locale")}</b> (Qwen3-TTS): ${T("occupa {g} GB e non serve più.", { g: (localState.old_qwen_mb / 1024).toFixed(1) })}<div class="row2"><button class="btn ok" data-y>${T("Elimina")}</button><button class="btn" data-n>${T("Non ora")}</button></div>`;
       old.classList.add("show");
-      old.querySelector("[data-y]").onclick = async () => { old.innerHTML = "Elimino…"; try { await B.localRemoveOld(); old.classList.remove("show"); } catch (e) { old.textContent = String(e); } };
+      old.querySelector("[data-y]").onclick = async () => { old.innerHTML = T("Elimino…"); try { await B.localRemoveOld(); old.classList.remove("show"); } catch (e) { old.textContent = String(e); } };
       old.querySelector("[data-n]").onclick = () => old.classList.remove("show");
     } else old.classList.remove("show");
     if (localState.installed) {
-      const vs = await B.localVoices();
-      $("lVoice").innerHTML = vs.map((v) => `<option value="${esc(v.id)}">${esc(v.name)}${v.downloaded ? "" : ` · da scaricare (${v.mb} MB)`}</option>`).join("");
+      const vs = (await B.localVoices()).sort((a, b) => (a.lang === Iris.lang ? 0 : 1) - (b.lang === Iris.lang ? 0 : 1)); // prima le voci della lingua scelta
+      $("lVoice").innerHTML = vs.map((v) => `<option value="${esc(v.id)}">${esc(v.name)}${v.downloaded ? "" : " · " + T("da scaricare ({mb} MB)", { mb: v.mb })}</option>`).join("");
       const cur = vs.find((v) => v.id === settings.tts.localVoice && v.downloaded) || vs.find((v) => v.downloaded) || vs[0];
       $("lVoice").value = cur ? cur.id : "";
       $("lVoice").onchange = () => {
         const v = vs.find((x) => x.id === $("lVoice").value);
-        if (v && !v.downloaded) askConfirm(`<b>Scarico la voce ${esc(v.name.split(" ")[0])}?</b><ul><li>Dimensione: ${v.mb} MB</li></ul>`, () => installLocal(v.id), () => ($("lVoice").value = cur.id));
+        if (v && !v.downloaded) askConfirm(`<b>${T("Scarico la voce {v}?", { v: esc(v.name.split(" ")[0]) })}</b><ul><li>${T("Dimensione: {mb} MB", { mb: v.mb })}</li></ul>`, () => installLocal(v.id), () => ($("lVoice").value = cur.id));
         else if (v) settings.tts.localVoice = v.id;
       };
+      // la voce scelta (per esempio dopo il cambio di lingua) non c'è ancora: si propone di scaricarla
+      const want = vs.find((v) => v.id === settings.tts.localVoice);
+      if (want && !want.downloaded && !localState.installing) { $("lVoice").value = want.id; $("lVoice").onchange(); }
       showSpeed();
     }
   }
@@ -941,14 +1110,14 @@
     try {
       const h = await B.localHealth();
       const f = h && h.ultima_frase;
-      if (!f || !f.audio_s) { el.textContent = h && h.running ? "Voce caricata e pronta." : "Si accende alla prima frase."; return; }
+      if (!f || !f.audio_s) { el.textContent = T(h && h.running ? "Voce caricata e pronta." : "Si accende alla prima frase."); return; }
       const k = f.audio_s / Math.max(0.01, f.calcolo_s);
-      el.textContent = `Ultima frase: ${f.calcolo_s.toFixed(2)} s di calcolo per ${f.audio_s.toFixed(1)} s di voce (${k >= 1 ? k.toFixed(0) + "× più veloce del parlato" : "più lenta del parlato: andrà a singhiozzo"})`;
+      el.textContent = T("Ultima frase: {c} s di calcolo per {a} s di voce ({k})", { c: f.calcolo_s.toFixed(2), a: f.audio_s.toFixed(1), k: k >= 1 ? T("{k}× più veloce del parlato", { k: k.toFixed(0) }) : T("più lenta del parlato: andrà a singhiozzo") });
     } catch (e) {}
   }
   document.querySelectorAll(".try").forEach((b) => b.addEventListener("click", () => setTimeout(showSpeed, 4000)));
   function askConfirm(html, onYes, onNo) {
-    const c = $("lConfirm"); c.innerHTML = html + `<div class="row2"><button class="btn ok" data-y>Scarica</button><button class="btn" data-n>Annulla</button></div>`;
+    const c = $("lConfirm"); c.innerHTML = html + `<div class="row2"><button class="btn ok" data-y>${T("Scarica")}</button><button class="btn" data-n>${T("Annulla")}</button></div>`;
     c.classList.add("show");
     c.querySelector("[data-y]").onclick = () => { c.classList.remove("show"); onYes(); };
     c.querySelector("[data-n]").onclick = () => { c.classList.remove("show"); onNo && onNo(); };
@@ -962,25 +1131,26 @@
   }
   B.onLocalInstall((p) => { $("lMsg").className = "res"; $("lMsg").textContent = p.msg || ""; if (p.frac != null) $("lProg").style.width = Math.round(p.frac * 100) + "%"; });
   $("lInstall").onclick = () => askConfirm(
-    `<b>Scarico la voce locale?</b><ul><li>Dimensione: circa 85 MB (programma Piper 22 MB + voce Paola 61 MB)</li><li>Gira sul processore: va bene anche su PC poco potenti, niente scheda video</li><li>Si installa nella cartella dell'app, non tocca il resto del PC</li></ul>`,
-    () => installLocal("paola"));
+    `<b>${T("Scarico la voce locale?")}</b><ul><li>${T("Dimensione: circa 85 MB (programma Piper 22 MB + voce {v} 61 MB)", { v: Iris.lang === "en" ? "Lessac" : "Paola" })}</li><li>${T("Gira sul processore: va bene anche su PC poco potenti, niente scheda video")}</li><li>${T("Si installa nella cartella dell'app, non tocca il resto del PC")}</li></ul>`,
+    () => installLocal(Iris.lang === "en" ? "lessac" : "paola"));
 
   function openSettings() {
     const s = settings;
+    segnaVisto(); // la versione nuova l'hai vista: il pallino sull'icona sparisce
     setSnap = JSON.parse(JSON.stringify(settings)); markDirty(false); // per "Annulla": com'era all'apertura
-    $("sZoom").value = String(zoom());
+    $("sZoom").value = String(zoom()); $("sLang").value = Iris.lang;
     const vol = Math.round((s.tts.volume != null ? s.tts.volume : 1) * 100); $("sVol").value = vol; $("sVolVal").textContent = vol + "%";
-    $("sUrl").value = s.hermesUrl || ""; $("sKey").value = ""; $("sKey").placeholder = s.hasHermesKey ? "•••••••• salvata (scrivi per cambiarla)" : "incolla la chiave";
+    $("sUrl").value = s.hermesUrl || ""; $("sKey").value = ""; $("sKey").placeholder = T(s.hasHermesKey ? "•••••••• salvata (scrivi per cambiarla)" : "incolla la chiave");
     seg("sSttMode", s.stt.mode, (v) => (s.stt.mode = v));
     $("sModel").value = s.stt.model; $("sUnload").value = String(s.stt.unloadMinutes);
-    $("sSttType").value = s.stt.serverType; $("sSttUrl").value = s.stt.serverUrl || ""; $("sSttKey").value = ""; $("sSttKey").placeholder = s.stt.hasServerKey ? "•••••••• salvata" : "";
-    $("sNoPreview").checked = !!s.stt.sendWithoutPreview;
+    $("sSttType").value = s.stt.serverType; $("sSttUrl").value = s.stt.serverUrl || ""; $("sSttKey").value = ""; $("sSttKey").placeholder = s.stt.hasServerKey ? T("•••••••• salvata") : "";
+    $("sNoPreview").checked = !!s.stt.sendWithoutPreview; $("sCompact").checked = s.stt.compact !== false;
     $("sTtsAuto").checked = !!s.tts.auto; $("sChime").checked = !!s.tts.chime;
     seg("sTtsEngine", s.tts.engine, (v) => { s.tts.engine = v; if (v === "local") refreshLocal(); });
     $("lUnload").value = String(s.tts.unloadMinutes != null ? s.tts.unloadMinutes : 10);
     if (s.tts.engine === "local") refreshLocal();
     fillVoices();
-    $("sTtsUrl").value = s.tts.serverUrl || ""; $("sTtsVoice").value = s.tts.serverVoice || ""; $("sTtsKey").value = ""; $("sTtsKey").placeholder = s.tts.hasServerKey ? "•••••••• salvata" : "";
+    $("sTtsUrl").value = s.tts.serverUrl || ""; $("sTtsVoice").value = s.tts.serverVoice || ""; $("sTtsKey").value = ""; $("sTtsKey").placeholder = s.tts.hasServerKey ? T("•••••••• salvata") : "";
     $("sRate").value = s.tts.rate || 1;
     $("sPtt").value = s.shortcuts.ptt; $("sOpen").value = s.shortcuts.open;
     $("sAutostart").checked = !!s.autostart; $("sDebug").checked = !!s.debug;
@@ -997,10 +1167,19 @@
   }
   function readSettings() {
     const s = settings;
+    // cambiando lingua seguono la trascrizione e la voce locale (se erano quelle dell'altra lingua)
+    const lang = $("sLang").value;
+    if (lang !== s.language) {
+      if (!s.stt.language || s.stt.language === (s.language || Iris.lang)) s.stt.language = lang;
+      const en = ["lessac", "ryan"].includes(s.tts.localVoice);
+      if (lang === "en" && !en) s.tts.localVoice = "lessac";
+      if (lang === "it" && en) s.tts.localVoice = "paola";
+      s.language = lang;
+    }
     s.hermesUrl = $("sUrl").value.trim().replace(/\/+$/, "");
     s.stt.model = $("sModel").value; s.stt.unloadMinutes = +$("sUnload").value;
     s.stt.serverType = $("sSttType").value; s.stt.serverUrl = $("sSttUrl").value.trim().replace(/\/+$/, "");
-    s.stt.sendWithoutPreview = $("sNoPreview").checked;
+    s.stt.sendWithoutPreview = $("sNoPreview").checked; s.stt.compact = $("sCompact").checked;
     s.tts.auto = $("sTtsAuto").checked; s.tts.chime = $("sChime").checked; s.tts.voice = $("sVoice").value;
     s.tts.serverUrl = $("sTtsUrl").value.trim().replace(/\/+$/, ""); s.tts.serverVoice = $("sTtsVoice").value.trim(); s.tts.rate = +$("sRate").value;
     if ($("lVoice").value) s.tts.localVoice = $("lVoice").value;
@@ -1020,8 +1199,8 @@
     return secrets;
   }
   // compleanno: giorno e mese scelti da due tendine
-  $("sBDay").innerHTML = `<option value="">giorno</option>` + Array.from({ length: 31 }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("");
-  $("sBMonth").innerHTML = `<option value="">mese</option>` + ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"].map((n, i) => `<option value="${i + 1}">${n}</option>`).join("");
+  $("sBDay").innerHTML = `<option value="">${T("giorno")}</option>` + Array.from({ length: 31 }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("");
+  $("sBMonth").innerHTML = `<option value="">${T("mese")}</option>` + ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"].map((n, i) => `<option value="${i + 1}">${T(n)}</option>`).join("");
   // "?": la spiegazione compare al passaggio del mouse (e il clic non accende l'interruttore)
   const tip = document.createElement("div"); tip.className = "tip"; document.body.appendChild(tip);
   document.addEventListener("mouseover", (e) => {
@@ -1098,18 +1277,21 @@
   $("setBack").onclick = closeSettings;
   $("sSave").onclick = async () => {
     const secrets = readSettings();
-    try { await B.saveSettings(settings, secrets); settings = await B.getSettings(); saved(); Iris.birthday = settings.island.birthday || ""; renderTtsBtn(); B.saveIsland(settings.island).catch(() => {}); flash($("sSave").lastChild, "Salvato"); $("sKey").value = ""; checkHealth(); }
+    const langPrima = Iris.lang;
+    try { await B.saveSettings(settings, secrets); settings = await B.getSettings(); saved();
+      if (settings.language !== langPrima) { const u = new URL(location.href); if (u.searchParams.has("lang")) { u.searchParams.set("lang", settings.language); location.replace(u.href); } else location.reload(); return; } // nuova lingua: si ricarica tutta l'interfaccia
+      Iris.birthday = settings.island.birthday || ""; renderTtsBtn(); B.saveIsland(settings.island).catch(() => {}); flash($("sSave").lastChild, T("Salvato")); $("sKey").value = ""; checkHealth(); }
     catch (e) { $("sTestRes").textContent = String(e); $("sTestRes").className = "res err"; }
   };
   $("sTest").onclick = async () => {
-    const r = $("sTestRes"); r.className = "res"; r.textContent = "Provo…";
+    const r = $("sTestRes"); r.className = "res"; r.textContent = T("Provo…");
     const secrets = readSettings(); await B.saveSettings(settings, secrets); settings = await B.getSettings(); saved();
     try {
       const t = await B.testHermes();
-      if (!t.ok) throw new Error(t.error || "non risponde");
+      if (!t.ok) throw new Error(t.error || T("non risponde"));
       const miss = ["runs", "run_approval", "sessions"].filter((k) => !t.features[k]);
       r.className = "res " + (miss.length ? "err" : "ok");
-      r.textContent = miss.length ? `Raggiungibile, ma mancano: ${miss.join(", ")} (Hermes da aggiornare)` : `Collegata${t.version ? " · Hermes " + t.version : ""}`;
+      r.textContent = miss.length ? T("Raggiungibile, ma mancano: {m} (Hermes da aggiornare)", { m: miss.join(", ") }) : `${T("Collegata")}${t.version ? " · Hermes " + t.version : ""}`;
     } catch (e) { r.className = "res err"; r.textContent = String(e.message || e); }
   };
   $("sModelDl").onclick = async () => { $("sModelDl").disabled = true; document.querySelector(".bar-p").classList.add("show"); try { await B.downloadModel(); } catch (e) { $("sModelState").textContent = String(e); } $("sModelDl").disabled = false; document.querySelector(".bar-p").classList.remove("show"); refreshModel(); };
@@ -1117,34 +1299,39 @@
   document.querySelectorAll(".try").forEach((b) => (b.onclick = tryVoice));
   async function tryVoice() {
     const sec = readSettings(); await B.saveSettings(settings, sec); saved();
-    $("sTtsRes").className = "res"; $("sTtsRes").textContent = settings.tts.engine === "local" ? "Preparo la voce… (la prima volta ci vuole un po')" : "";
+    $("sTtsRes").className = "res"; $("sTtsRes").textContent = settings.tts.engine === "local" ? T("Preparo la voce… (la prima volta ci vuole un po')") : "";
     dlog(`prova voce: motore ${settings.tts.engine}`);
-    Iris.tts.speak("Ciao, sono Iris. Così suona la mia voce.", settings.tts, "try", () => { if ($("sTtsRes").className === "res") $("sTtsRes").textContent = ""; });
+    Iris.tts.speak(T("Ciao, sono Iris. Così suona la mia voce."), settings.tts, "try", () => { if ($("sTtsRes").className === "res") $("sTtsRes").textContent = ""; });
   }
   $("sLogOpen").onclick = () => B.openLogs && B.openLogs().catch((e) => { $("sLog").textContent = String(e); $("sLog").classList.add("show"); });
   $("sLogShow").onclick = async () => {
     const box = $("sLog");
     if (box.classList.toggle("show")) {
-      try { const t = await B.logTail(); box.textContent = `— Iris (${t.dir}\\iris.log) —\n${t.iris || "vuoto"}\n\n— Voce locale (voce-locale.log) —\n${t.voce || "vuoto"}`; box.scrollTop = box.scrollHeight; }
+      try { const t = await B.logTail(); box.textContent = `— Iris (${t.dir}\\iris.log) —\n${t.iris || T("vuoto")}\n\n— ${T("Voce locale")} (voce-locale.log) —\n${t.voce || T("vuoto")}`; box.scrollTop = box.scrollHeight; }
       catch (e) { box.textContent = String(e); }
     }
   };
 
   /* ---------- versione nuova su GitHub? solo un avviso, si scarica e si installa a mano ---------- */
+  /* Senza disturbare: il pallino sull'icona delle impostazioni resta finché non le apri (o clicchi il link),
+     poi sparisce per quella versione; in basso, accanto al numero di versione, resta "Nuova versione" cliccabile. */
   let update = null;
+  const visto = () => { try { return localStorage.getItem("irisUpdVista") || ""; } catch (e) { return ""; } };
+  function segnaVisto() { if (update && update.available) { try { localStorage.setItem("irisUpdVista", update.latest); } catch (e) {} } $("updDot").classList.remove("show"); }
   async function checkUpdate() {
     if (!B.checkUpdate) return;
     try { update = await B.checkUpdate(); } catch (e) { return; }
     const on = !!update.available;
-    $("updDot").classList.toggle("show", on); $("upd").classList.toggle("show", on);
-    if (on) $("updTxt").textContent = `C'è una versione nuova su GitHub: ${update.latest}`;
+    $("updDot").classList.toggle("show", on && visto() !== update.latest);
+    $("newVer").classList.toggle("show", on);
+    if (on) $("newVer").textContent = T("Nuova versione {v}", { v: update.latest });
   }
-  $("updOpen").onclick = () => update && update.url && B.openLink(update.url);
+  $("newVer").onclick = () => { segnaVisto(); if (update && update.url) B.openLink(update.url); };
   // Informazioni: versione e collegamenti al repository (licenza, privacy, crediti, codice)
   let info = null;
   (async () => {
     try { info = B.appInfo ? await B.appInfo() : null; } catch (e) {}
-    if (info) { $("aboutVer").textContent = info.version; $("verTxt").textContent = "versione " + info.version; }
+    if (info) { $("aboutVer").textContent = info.version; $("verTxt").textContent = T("versione {v}", { v: info.version }); }
     document.querySelectorAll("[data-link]").forEach((b) => (b.onclick = () => info && B.openLink(info.repo + b.dataset.link)));
   })();
 
@@ -1158,12 +1345,15 @@
   /* ---------- avvio ---------- */
   (async function init() {
     settings = await B.getSettings();
+    // lingua: quella salvata, oppure quella di Windows al primo avvio (e si salva)
+    if (!settings.language) { settings.language = Iris.i18n.guess(); if (settings.language === "en") { settings.stt.language = "en"; settings.tts.localVoice = "lessac"; } B.saveSettings(settings, {}).catch(() => {}); }
+    Iris.i18n.setLang(settings.language); Iris.i18n.translatePage(document.body);
     if (!settings.island) settings.island = { mode: "top", x: null, y: null, screen: "", open: "hover", openDelay: 1000, closeDelay: 1500, follow: true, birthday: "", border: 6 };
     Iris.birthday = settings.island.birthday || "";
     mineIds = new Set(settings.islandSessions || []); pinIds = new Set(settings.pinnedLocal || []);
     // la Dimensione salvata si applica subito: prima i calcoli la usavano ma la pagina restava a misura normale,
     // e l'isola disegnata non coincideva più con quella che riceve i clic
-    if (![0.85, 1, 1.2].includes(zoom())) settings.island.zoom = 1;
+    if (![0.85, 0.9, 0.95, 1, 1.05, 1.1, 1.2, 1.3].includes(zoom())) settings.island.zoom = 1;
     applyZoom();
     await readScreen();
     renderTtsBtn();
@@ -1178,7 +1368,7 @@
     sorpresa((3 + Math.random() * 7) * 60000); // il primo easter egg a sorpresa tra 3 e 10 minuti
     setInterval(() => { if (!expanded && !drag) readScreen().then(() => place(false)); }, 15000);
     setTimeout(() => warmVoice(true), 3000);
-    checkUpdate(); setInterval(checkUpdate, 6 * 3600 * 1000);
+    checkUpdate(); setInterval(checkUpdate, 12 * 3600 * 1000); // ogni 12 ore: nessuna fretta
     checkHealth(); setInterval(checkHealth, 15000);
     if (!settings.hermesUrl || !settings.hasHermesKey) { expand(); openSettings(); }
   })();
@@ -1195,13 +1385,13 @@
         mie.push(Iris.registerEgg(f.id, JSON.parse(f.text)));
       } catch (e) { errori++; if (B.log) B.log("errore", `animazione ${f.id}.json: ${e.message || e}`); }
     }
-    $("aCount").textContent = `${mie.length} caricate` + (errori ? ` · ${errori} con errori (vedi Ultimi errori)` : "");
+    $("aCount").textContent = T("{n} caricate", { n: mie.length }) + (errori ? T(" · {n} con errori (vedi Ultimi errori)", { n: errori }) : "");
     $("aCount").className = "res" + (errori ? " err" : mie.length ? " ok" : "");
   }
   $("aOpen").onclick = () => B.openAnimations && B.openAnimations().catch(() => {});
   $("aReload").onclick = caricaAnimazioni;
   $("aTry").onclick = () => {
-    if (!mie.length) return ($("aCount").textContent = "Nessuna animazione nella cartella");
+    if (!mie.length) return ($("aCount").textContent = T("Nessuna animazione nella cartella"));
     let i = 0; const una = () => { if (i >= mie.length) return; const id = mie[i++]; eyes.playEgg(id); setTimeout(una, Iris.EGGS[id].dur + 800); }; una();
   };
 
@@ -1235,8 +1425,8 @@
     $("dOpen").onclick = () => (expanded ? collapse(true) : expand());
     $("dPtt").onmousedown = () => Iris.mock._ptt(true);
     $("dPtt").onmouseup = $("dPtt").onmouseleave = () => voiceFromPtt && voiceMode === "rec" && Iris.mock._ptt(false);
-    $("dAsk").onclick = () => { expand(); setTimeout(() => send("Che tempo fa domani a Roma?"), 300); };
-    $("dBudget").onclick = () => { expand(); setTimeout(() => send("Segna nel budget la bolletta della luce"), 300); };
+    $("dAsk").onclick = () => { expand(); setTimeout(() => send(T("Che tempo fa domani a Roma?")), 300); };
+    $("dBudget").onclick = () => { expand(); setTimeout(() => send(T("Segna nel budget la bolletta della luce")), 300); };
     $("dSleep").onclick = () => { reachable ? ((reachable = false), setState("sleep")) : ((reachable = true), setState("idle")); };
     let eggN = 0; const eggs = Object.keys(Iris.EGGS).filter((k) => !["solletico", "giramento"].includes(k));
     $("dEgg").onclick = () => { collapse(true); eyes.playEgg(eggs[eggN++ % eggs.length]); };

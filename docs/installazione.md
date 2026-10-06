@@ -10,6 +10,8 @@
 
 > ⚠️ **Windows SmartScreen** mostrerà "Windows ha protetto il PC", perché il programma non è firmato. Clicca **Ulteriori informazioni → Esegui comunque**. Capita a tutti i programmi non firmati; firmarlo costa un certificato a pagamento.
 
+Serve **Hermes Agent 0.21 o più recente**: le versioni precedenti salvano la conversazione ma non la ripassano al modello, quindi ogni domanda riceve risposta come se fosse la prima (si aggiorna con `hermes update`).
+
 Serve **WebView2**, che su Windows 10/11 aggiornati c'è già. Se manca, l'installer lo scarica da solo. Non serve installare nient'altro: niente Python, niente runtime.
 
 **Dove salva le sue cose:** `%APPDATA%\Iris Notch` (impostazioni, `logs\`, modello di trascrizione, voce locale). Fino alla 0.1.1 la cartella si chiamava `it.irisvolto.app`: la 0.1.2 la sposta da sola. Disinstallando, Windows chiede se cancellare anche i dati: spuntalo per ripartire da zero.
@@ -55,6 +57,14 @@ La scheda video si usa tramite **Vulkan**, che arriva con i driver NVIDIA: non s
 
 Compare **"Ho capito questo"** con il testo modificabile: correggi se serve e premi **Invia** (o Invio). Se preferisci saltare l'anteprima, c'è l'opzione *Invia subito quello che dico*.
 
+**Voce compatta** (accesa di serie, si spegne in *Voce → testo*): se usi la scorciatoia **con l'isola chiusa**, la chat non si apre. La tacca si allunga appena e ti mostra cosa ha capito:
+
+- **Invio**, la spunta o **un tocco breve** della scorciatoia: manda;
+- **Esc** o la X: annulla;
+- **tieni di nuovo premuta** la scorciatoia: riparli da capo.
+
+Con *Invia subito* compare una barretta verde che si svuota in un paio di secondi, poi la domanda parte da sola (Esc la ferma). Mentre Iris lavora la tacca resta piccola, con lo stato accanto agli occhi; la **risposta** arriva lì dentro (si scorre con la rotellina) e dopo qualche secondo la tacca torna normale. Se serve il **via libera**, lo chiede nella tacca: **Invio** una volta, **Esc** nega, i comandi lunghi si scorrono con la rotellina. **Clicca sugli occhi** per aprire la chat completa e vedere tutto. Invio ed Esc funzionano anche se stai scrivendo in un altro programma, ma solo per pochi secondi mentre la tacca te li chiede.
+
 ## 5. Risposte a voce
 
 - **Volume della voce**, in cima a *Testo → voce*: quanto forte parla Iris (e suona l'avviso). Cambia subito, e alla fine del cursore senti un suono di prova.
@@ -80,13 +90,13 @@ Motori:
   - **Si richiude** dopo 0,7-5 secondi che il mouse è uscito; da 1 secondo in su una barretta in basso fa il conto alla rovescia;
   - **Occhi che seguono** il mouse, che si può spegnere;
   - **Rimettila al centro**.
-- Impostazioni → **Generale**: il tuo **compleanno** (giorno e mese: quel giorno ci sono i coriandoli), **Avvia con Windows**, la **cornice nera** intorno agli occhi (0-16 px) e la **Dimensione** di tutta l'app (Piccola, Normale, Grande: ingrandisce isola, occhi, chat e impostazioni insieme).
+- Impostazioni → **Generale**: la **lingua** (italiano o inglese: interfaccia, voci locali e trascrizione; l'app si ricarica), il tuo **compleanno** (giorno e mese: quel giorno ci sono i coriandoli), **Avvia con Windows**, la **cornice nera** intorno agli occhi (0-16 px) e la **Dimensione** di tutta l'app (da −3 a +4 a piccoli passi, 0 è la normale: ingrandisce isola, occhi, chat e impostazioni insieme).
 - **Puntina** accesa e isola aperta: prendendola dagli occhi si sposta tutta la finestra aperta, senza richiuderla. Se la lasci oltre un bordo o sopra la barra delle applicazioni rientra con una piccola molla; altrimenti resta esattamente dove l'hai lasciata.
 - Impostazioni → **Debug e prove**: modalità debug (log dettagliato), **Mostra l'area** (colora dove giocano gli occhi), ultimi errori e cartella dei log.
 - Ogni opzione ha un **?**: passandoci sopra col mouse spiega a cosa serve.
 - **Le modifiche valgono solo con Salva.** Appena cambi qualcosa compare **Annulla** accanto a Salva, e l'isola non si richiude da sola finché non scegli. Annulla, la **freccia indietro**, `Esc` o di nuovo l'**icona delle impostazioni** scartano le modifiche e chiudono.
 
-Toccando gli occhi 3 volte di fila ride, a 7 volte gli gira la testa.
+Toccando gli occhi 3 volte di fila ride, a 7 volte gli gira la testa. Se lo accarezzi passando il mouse piano avanti e indietro fa le fusa; se lo trascini veloce strizza gli occhi controvento; quando lo lasci atterra con un rimbalzo. Se arriva una risposta mentre l'isola è chiusa, vola dentro una busta. Dopo il pisolino si sveglia ogni volta in un modo diverso, e dopo più di mezz'ora ti dà il bentornato.
 
 **Secondo l'ora**, aprendo l'isola (una volta per fascia): a notte fonda ha le occhiaie, prestissimo sbadiglia, la mattina beve il caffè, nel tardo pomeriggio a volte si stiracchia, la sera è rilassato con qualche stellina.
 
@@ -127,7 +137,7 @@ Il titolo in alto apre il menu:
 | `Esc` | chiude impostazioni, anteprima voce o isola |
 | Icona nell'area di notifica | *Apri / chiudi l'isola* ed **Esci da Iris Notch** (il programma non sta nella barra delle applicazioni) |
 | Avvia con Windows | nelle impostazioni, sezione Generale |
-| Aggiornamenti | un pallino verde sulle impostazioni avvisa quando su GitHub c'è una versione nuova: si scarica e si installa a mano |
+| Aggiornamenti | due volte al giorno controlla GitHub; un pallino verde sulle impostazioni e "Nuova versione" sotto il numero di versione avvisano quando ce n'è una: si scarica e si installa a mano |
 
 ## Problemi noti
 

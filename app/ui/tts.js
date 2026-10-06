@@ -64,8 +64,9 @@
       if (!window.speechSynthesis) return resolve();
       const u = new SpeechSynthesisUtterance(text);
       const vs = speechSynthesis.getVoices();
-      u.voice = vs.find((v) => v.voiceURI === cfg.voice) || vs.find((v) => /^it/i.test(v.lang)) || null;
-      u.lang = (u.voice && u.voice.lang) || "it-IT";
+      const en = Iris.lang === "en";
+      u.voice = vs.find((v) => v.voiceURI === cfg.voice) || vs.find((v) => (en ? /^en/i : /^it/i).test(v.lang)) || null;
+      u.lang = (u.voice && u.voice.lang) || (en ? "en-US" : "it-IT");
       u.rate = cfg.rate || 1;
       u.volume = volume;
       u.onend = u.onerror = () => resolve();

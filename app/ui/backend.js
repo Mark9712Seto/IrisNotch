@@ -38,6 +38,8 @@
     cancelRecording: () => invoke("cancel_recording"),
     onMicLevel: on("mic-level"),
     onPtt: on("ptt"),
+    voiceKeys: (on) => invoke("voice_keys", { on }).catch(() => {}),
+    onVoiceKey: on("voice-key"),
     onOpen: on("open-island"),
     modelStatus: () => invoke("model_status"),
     downloadModel: () => invoke("download_model"),

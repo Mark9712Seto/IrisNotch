@@ -23,6 +23,8 @@ struct AppState {
     settings: Mutex<Settings>,
     recorder: Mutex<Option<voice::Recorder>>,
     shortcuts: Mutex<(Option<Shortcut>, Option<Shortcut>)>, // (premi e parla, apri)
+    /// Invio ed Esc presi in prestito mentre si vede l'anteprima della voce compatta (isola chiusa, il focus è altrove)
+    voice_keys: Mutex<Option<(Shortcut, Shortcut)>>,
 }
 
 fn hermes(st: &State<AppState>) -> Result<Hermes, String> {
@@ -48,9 +50,21 @@ fn save_settings(app: AppHandle, st: State<AppState>, settings: Settings, secret
     let autostart = settings.autostart;
     *st.settings.lock().unwrap() = settings;
     register_shortcuts(&app);
+    // il menu dell'icona segue la lingua scelta
+    if let Some(t) = app.try_state::<TrayItems>() {
+        let (o, q) = tray_texts();
+        let _ = t.0.set_text(o);
+        let _ = t.1.set_text(q);
+    }
     let al = app.autolaunch();
     let _ = if autostart { al.enable() } else { al.disable() };
     Ok(())
+}
+
+/// le due voci del menu dell'icona nell'area di notifica
+struct TrayItems(MenuItem<tauri::Wry>, MenuItem<tauri::Wry>);
+fn tray_texts() -> (String, String) {
+    (settings::t("Apri / chiudi l'isola", "Open / close the island"), settings::t("Esci da Iris Notch", "Quit Iris Notch"))
 }
 
 /* ---------------- Hermes ---------------- */
@@ -83,7 +97,7 @@ async fn create_session(st: State<'_, AppState>) -> Result<Value, String> {
 async fn rename_session(st: State<'_, AppState>, session_id: String, title: String) -> Result<Value, String> {
     let title = title.trim();
     if title.is_empty() {
-        return Err("Il nome non può essere vuoto".into());
+        return Err(crate::settings::t("Il nome non può essere vuoto", "The name can't be empty"));
     }
     hermes(&st)?.rename_session(&session_id, title).await
 }
@@ -161,7 +175,7 @@ async fn stop_recording(app: AppHandle, st: State<'_, AppState>) -> Result<Value
     let rec = st.recorder.lock().unwrap().take().ok_or("Non stavo registrando")?;
     let audio = tauri::async_runtime::spawn_blocking(move || rec.stop()).await.map_err(|e| e.to_string())?;
     if audio.len() < 16000 / 4 {
-        return Err("Registrazione troppo corta".into());
+        return Err(crate::settings::t("Registrazione troppo corta", "Recording too short"));
     }
     let stt = st.settings.lock().unwrap().stt.clone();
     let t0 = std::time::Instant::now();
@@ -507,7 +521,8 @@ async fn check_update() -> Result<Value, String> {
         .timeout(std::time::Duration::from_secs(10))
         .build()
         .map_err(|e| e.to_string())?
-        .get(format!("https://api.github.com/repos/{REPO}/releases/latest"))
+        // tutte le Release, non solo "latest": le 0.x sono pre-release e "latest" le salta
+        .get(format!("https://api.github.com/repos/{REPO}/releases?per_page=20"))
         .send()
         .await
         .map_err(|e| e.to_string())?;
@@ -515,9 +530,16 @@ async fn check_update() -> Result<Value, String> {
     if !r.status().is_success() {
         return Ok(json!({ "available": false, "current": current }));
     }
-    let v: Value = r.json().await.map_err(|e| e.to_string())?;
-    let latest = v["tag_name"].as_str().unwrap_or_default().trim_start_matches('v').to_string();
-    let url = v["html_url"].as_str().unwrap_or_default().to_string();
+    let list: Value = r.json().await.map_err(|e| e.to_string())?;
+    // la versione più alta tra quelle pubblicate (le bozze no)
+    let best = list
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter(|v| !v["draft"].as_bool().unwrap_or(false))
+        .filter_map(|v| Some((v["tag_name"].as_str()?.trim_start_matches('v').to_string(), v["html_url"].as_str().unwrap_or_default().to_string())))
+        .max_by(|a, b| version_tuple(&a.0).cmp(&version_tuple(&b.0)));
+    let (latest, url) = best.unwrap_or_default();
     let available = !latest.is_empty() && version_tuple(&latest) > version_tuple(current);
     Ok(json!({ "available": available, "current": current, "latest": latest, "url": url }))
 }
@@ -528,7 +550,7 @@ fn open_link(url: String) -> Result<(), String> {
     let ok = url.starts_with(&format!("https://github.com/{REPO}"))
         && url.chars().all(|c| c.is_ascii_alphanumeric() || "/:.-_#".contains(c));
     if !ok {
-        return Err("Indirizzo non valido".into());
+        return Err(crate::settings::t("Indirizzo non valido", "Invalid address"));
     }
     #[cfg(windows)]
     let r = std::process::Command::new("explorer").arg(&url).spawn();
@@ -544,6 +566,29 @@ fn app_info(app: AppHandle) -> Value {
 }
 
 /* ---------------- scorciatoie ---------------- */
+
+/// Voce compatta: con l'isola chiusa la tastiera è di un altro programma, quindi per confermare l'anteprima con
+/// Invio (o annullarla con Esc) i due tasti si registrano per un momento come scorciatoie globali, e si rilasciano
+/// appena l'anteprima sparisce (l'interfaccia li rilascia comunque dopo 15 secondi).
+#[tauri::command]
+fn voice_keys(app: AppHandle, st: State<AppState>, on: bool) {
+    let gs = app.global_shortcut();
+    let mut k = st.voice_keys.lock().unwrap();
+    if let Some((a, b)) = k.take() {
+        let _ = gs.unregister(a);
+        let _ = gs.unregister(b);
+    }
+    if on {
+        if let (Ok(enter), Ok(esc)) = ("Enter".parse::<Shortcut>(), "Escape".parse::<Shortcut>()) {
+            if gs.register(enter).is_ok() && gs.register(esc).is_ok() {
+                *k = Some((enter, esc));
+            } else {
+                let _ = gs.unregister(enter);
+                let _ = gs.unregister(esc);
+            }
+        }
+    }
+}
 
 fn parse_shortcut(s: &str) -> Option<Shortcut> {
     let keys: Vec<&str> = s
@@ -563,6 +608,7 @@ fn register_shortcuts(app: &AppHandle) {
     let s = st.settings.lock().unwrap().shortcuts.clone();
     let gs = app.global_shortcut();
     let _ = gs.unregister_all();
+    *st.voice_keys.lock().unwrap() = None; // tolte anche Invio ed Esc prese in prestito
     let ptt = parse_shortcut(&s.ptt);
     let open = parse_shortcut(&s.open);
     for sc in [ptt, open].into_iter().flatten() {
@@ -584,6 +630,12 @@ pub fn run() {
                 .with_handler(|app, sc, ev| {
                     let st = app.state::<AppState>();
                     let (ptt, open) = *st.shortcuts.lock().unwrap();
+                    if let Some((enter, esc)) = *st.voice_keys.lock().unwrap() {
+                        if ev.state() == ShortcutState::Pressed && (*sc == enter || *sc == esc) {
+                            let _ = app.emit("voice-key", if *sc == enter { "enter" } else { "escape" });
+                            return;
+                        }
+                    }
                     if Some(*sc) == ptt {
                         let s = if ev.state() == ShortcutState::Pressed { "pressed" } else { "released" };
                         let _ = app.emit("ptt", s);
@@ -601,13 +653,15 @@ pub fn run() {
             let s = settings::load(app.handle());
             log::write(app.handle(), "info", &format!("avvio di Iris Notch {}", app.package_info().version));
             app.manage(tts_local::LocalTts::new());
-            app.manage(AppState { settings: Mutex::new(s), recorder: Mutex::new(None), shortcuts: Mutex::new((None, None)) });
+            app.manage(AppState { settings: Mutex::new(s), recorder: Mutex::new(None), shortcuts: Mutex::new((None, None)), voice_keys: Mutex::new(None) });
             register_shortcuts(app.handle());
 
             // icona nell'area di notifica: è l'unico modo di chiudere il programma (non sta nella barra delle applicazioni)
-            let open = MenuItem::with_id(app, "open", "Apri / chiudi l'isola", true, None::<&str>)?;
-            let quit = MenuItem::with_id(app, "quit", "Esci da Iris Notch", true, None::<&str>)?;
+            let (t_open, t_quit) = tray_texts();
+            let open = MenuItem::with_id(app, "open", t_open, true, None::<&str>)?;
+            let quit = MenuItem::with_id(app, "quit", t_quit, true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&open, &quit])?;
+            app.manage(TrayItems(open.clone(), quit.clone()));
             TrayIconBuilder::new()
                 .icon(app.default_window_icon().cloned().expect("icona"))
                 .tooltip("Iris Notch")
@@ -642,6 +696,7 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            voice_keys,
             get_settings,
             save_settings,
             hermes_ping,

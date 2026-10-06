@@ -55,12 +55,17 @@ When the agent wants to run something that needs your permission, the eyes turn 
 
 ### 🎙️ Talk to it, hear it answer
 - **Push to talk**: speech-to-text runs **on your PC** (whisper.cpp, GPU via Vulkan) or on your own Whisper server, with an editable preview before sending.
-- **Spoken replies**: local Italian voices with [Piper](https://github.com/rhasspy/piper) (Paola, Riccardo: about 85 MB, CPU only, no Python), Windows voices, or any OpenAI-compatible TTS server.
+- **Spoken replies**: local voices with [Piper](https://github.com/rhasspy/piper) (English: Lessac, Ryan; Italian: Paola, Riccardo; about 85 MB, CPU only, no Python), Windows voices, or any OpenAI-compatible TTS server.
 - Reading starts with the first sentence, while the reply is still being written. Volume and speed are adjustable.
 
 </td>
 </tr>
 </table>
+
+### 🤫 Compact voice: ask without opening anything
+<img src="docs/images/compact-voice.en.gif" alt="Compact voice: question, approval and reply inside the notch" width="600">
+
+With the island closed, hold the shortcut and talk. The notch stretches just enough to show what it heard: **Enter** (or a tap of the shortcut) sends, **Esc** cancels, hold it again to redo. If the agent needs approval, it asks right there in the notch (**Enter** allows once, **Esc** denies, long commands scroll with the mouse wheel), and the reply shows up there too. Click the eyes to open the full chat. You can also skip the check: a short green bar, then it's sent.
 
 ### 👀 Live agent state
 
@@ -78,7 +83,7 @@ The eyes follow the real events of every Hermes run:
 
 ### ✨ Personality
 
-It blinks, looks around and follows your mouse — sometimes eagerly, sometimes it couldn't care less. Leave the PC alone and it takes a nap; fling the mouse across the screen and it gets dizzy. Every 5 to 40 minutes, a surprise: **more than 50 small animations**, including Pong, Pac-Man, a DVD screensaver, holidays from around the world (Lunar New Year, Holi, Hanami, Star Wars Day, Diwali, Día de los Muertos, Thanksgiving…), greetings that change with the time of day, and confetti on your birthday.
+It blinks, looks around and follows your mouse — sometimes eagerly, sometimes it couldn't care less. Leave the PC alone and it takes a nap; fling the mouse across the screen and it gets dizzy. Every 5 to 40 minutes, a surprise: **more than 150 small animations**, including Pong, Pac-Man, a DVD screensaver, holidays from around the world (Lunar New Year, Holi, Hanami, Star Wars Day, Diwali, Día de los Muertos, Thanksgiving…), greetings that change with the time of day, and confetti on your birthday.
 
 **[See them all, live →](https://mark9712seto.github.io/IrisNotch/animations.html)**
 
@@ -109,7 +114,7 @@ Full guide: [**docs/install.md**](docs/install.md) ([italiano](docs/installazion
 2. **Download the installer** from the [latest release](../../releases/latest) and run it. The app isn't code-signed yet, so Windows SmartScreen will warn you: **More info → Run anyway**.
 3. On first start the settings open: enter the Hermes address (for example `http://your-hermes-host:8642`) and the API key, press **Test**, then **Save**.
 
-Requirements: Windows 10/11 (WebView2 is already there on up-to-date systems) and a Hermes Agent. A GPU makes local speech-to-text faster; the local voice runs on any CPU. The interface is in Italian for now.
+Requirements: Windows 10/11 (WebView2 is already there on up-to-date systems) and Hermes Agent **0.21 or newer** (older versions answer every message as if it were the first one, without the earlier conversation). A GPU makes local speech-to-text faster; the local voice runs on any CPU. The app is in **English and Italian** (Settings → General → Language), with local voices in both languages.
 
 <details>
 <summary><b>Settings at a glance</b></summary>
@@ -170,9 +175,10 @@ Free to **use, study, modify and share for any non-commercial purpose**, under t
 
 - **Si apre** passando sopra o con un clic, e diventa una chat. La tacca si stacca e diventa una bolla da mettere dove vuoi.
 - **Ci parli** tenendo premuta una scorciatoia: la trascrizione avviene sul tuo PC (o su un tuo server).
-- **Ti risponde a voce** con Paola o Riccardo (Piper, sul processore, circa 85 MB), con le voci di Windows o con un server TTS.
+- **Voce compatta**: a isola chiusa tieni premuta la scorciatoia e parla; la tacca si allunga, mostra cosa ha capito, e con Invio parte. Via libera e risposta arrivano lì, nella tacca, senza aprire niente.
+- **Ti risponde a voce** con Paola o Riccardo, o in inglese con Lessac e Ryan (Piper, sul processore, circa 85 MB), con le voci di Windows o con un server TTS.
 - **Riprendi** le sessioni nate altrove (Telegram, terminale…) e dai il **via libera** alle azioni, una volta o nega.
-- **Ha carattere**: più di 50 animazioni a sorpresa, feste di tutto il mondo, saluti secondo l'ora, e puoi aggiungerne di tue con un file JSON.
+- **Ha carattere**: più di 150 animazioni a sorpresa, feste di tutto il mondo, saluti secondo l'ora, e puoi aggiungerne di tue con un file JSON.
 
 [**Prova la demo**](https://mark9712seto.github.io/IrisNotch/demo.html) · [Sito](https://mark9712seto.github.io/IrisNotch/) · [Scarica](../../releases/latest) · [Guida all'installazione](docs/installazione.md) · [Accendere l'API server di Hermes](docs/hermes-setup.it.md)
 

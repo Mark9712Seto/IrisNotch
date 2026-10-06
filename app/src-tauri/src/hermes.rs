@@ -19,7 +19,7 @@ pub struct Hermes {
 fn err(e: impl std::fmt::Display) -> String {
     let s = e.to_string();
     if s.contains("error sending request") || s.contains("connect") {
-        format!("Hermes non raggiungibile ({s})")
+        format!("{} ({s})", crate::settings::t("Hermes non raggiungibile", "Hermes can't be reached"))
     } else {
         s
     }
@@ -29,7 +29,7 @@ impl Hermes {
     pub fn new(base: &str, key: Option<String>) -> Result<Self, String> {
         let base = base.trim().trim_end_matches('/').to_string();
         if base.is_empty() {
-            return Err("Indirizzo di Hermes non impostato (Impostazioni → Hermes)".into());
+            return Err(crate::settings::t("Indirizzo di Hermes non impostato (Impostazioni → Hermes)", "Hermes address not set (Settings → Hermes)"));
         }
         let key = key.ok_or("Chiave API di Hermes non impostata (Impostazioni → Hermes)")?;
         let http = reqwest::Client::builder()
@@ -57,11 +57,11 @@ impl Hermes {
         let status = r.status();
         let body: Value = r.json().await.unwrap_or(Value::Null);
         if status.as_u16() == 401 {
-            return Err("Chiave API rifiutata da Hermes (401)".into());
+            return Err(crate::settings::t("Chiave API rifiutata da Hermes (401)", "API key rejected by Hermes (401)"));
         }
         if !status.is_success() {
             let msg = body["error"]["message"].as_str().or(body["error"].as_str()).unwrap_or("errore");
-            return Err(format!("Hermes ha risposto {status}: {msg}"));
+            return Err(format!("{} {status}: {msg}", crate::settings::t("Hermes ha risposto", "Hermes replied")));
         }
         Ok(body)
     }
@@ -134,7 +134,7 @@ impl Hermes {
 
     pub async fn start_run(&self, session_id: &str, text: &str) -> Result<String, String> {
         let v = Self::json(self.post("/v1/runs").json(&json!({ "input": text, "session_id": session_id }))).await?;
-        v["run_id"].as_str().map(String::from).ok_or_else(|| "Hermes non ha restituito il run_id".into())
+        v["run_id"].as_str().map(String::from).ok_or_else(|| crate::settings::t("Hermes non ha restituito il run_id", "Hermes didn't return a run_id"))
     }
 
     pub async fn approve(&self, run_id: &str, choice: &str) -> Result<(), String> {

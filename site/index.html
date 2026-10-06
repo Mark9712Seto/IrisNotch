@@ -114,6 +114,7 @@
           <h3><span lang="en">It asks before it acts</span><span lang="it">Chiede prima di agire</span></h3>
           <p><span lang="en">When the agent wants to do something that needs your permission, the eyes turn red and the exact command shows up. Allow it once, or deny it.</span><span lang="it">Quando l'agente vuole fare qualcosa che richiede il tuo permesso, gli occhi diventano rossi e compare il comando esatto. Lo permetti una volta, o lo neghi.</span></p>
           <ul>
+            <li><span lang="en">Long commands scroll inside the card; the buttons always stay in view</span><span lang="it">I comandi lunghi scorrono dentro la scheda; i pulsanti restano sempre visibili</span></li>
             <li><span lang="en">“Always allow” is left to Hermes' own interfaces, on purpose</span><span lang="it">“Consenti sempre” resta di proposito alle interfacce di Hermes</span></li>
           </ul>
         </div>
@@ -126,7 +127,7 @@
           <h3><span lang="en">Talk to it, and hear it answer</span><span lang="it">Parlagli, e ascolta la risposta</span></h3>
           <p><span lang="en">Hold a shortcut and speak: speech-to-text runs on your PC with whisper.cpp (GPU via Vulkan) or on your own Whisper server, with an editable preview before sending.</span><span lang="it">Tieni premuta una scorciatoia e parla: la trascrizione gira sul tuo PC con whisper.cpp (scheda video con Vulkan) o sul tuo server Whisper, con un'anteprima da correggere prima di inviare.</span></p>
           <ul>
-            <li><span lang="en">Local Italian voices with <a href="https://github.com/rhasspy/piper">Piper</a>: about 85 MB, on the CPU, no GPU or Python needed</span><span lang="it">Voci italiane locali con <a href="https://github.com/rhasspy/piper">Piper</a>: circa 85 MB, sul processore, senza scheda video né Python</span></li>
+            <li><span lang="en">Local Italian and English voices with <a href="https://github.com/rhasspy/piper">Piper</a>: about 85 MB, on the CPU, no GPU or Python needed</span><span lang="it">Voci locali italiane e inglesi con <a href="https://github.com/rhasspy/piper">Piper</a>: circa 85 MB, sul processore, senza scheda video né Python</span></li>
             <li><span lang="en">Or Windows voices, or any OpenAI-compatible TTS server</span><span lang="it">Oppure le voci di Windows, o un server TTS compatibile OpenAI</span></li>
             <li><span lang="en">Reading starts with the first sentence, while the reply is still being written</span><span lang="it">La lettura parte dalla prima frase, mentre la risposta si sta ancora scrivendo</span></li>
           </ul>
@@ -136,12 +137,28 @@
 
       <div class="feat">
         <div>
+          <span class="tag"><span lang="en">Compact voice</span><span lang="it">Voce compatta</span></span>
+          <h3><span lang="en">Ask without opening anything</span><span lang="it">Chiedi senza aprire niente</span></h3>
+          <p><span lang="en">With the island closed, hold the shortcut and talk: the notch stretches just enough to show what it heard. Press Enter and keep working — the approval, if needed, and the reply show up right there in the notch.</span><span lang="it">Con l'isola chiusa tieni premuta la scorciatoia e parla: la tacca si allunga quel tanto che basta per mostrarti cosa ha capito. Premi Invio e continui a lavorare: il via libera, se serve, e la risposta arrivano lì, nella tacca.</span></p>
+          <ul>
+            <li><span lang="en">Enter or a tap of the shortcut sends, Esc cancels, hold it again to redo</span><span lang="it">Invio o un tocco della scorciatoia manda, Esc annulla, tienila premuta per rifare</span></li>
+            <li><span lang="en">Or skip the check: a short green bar, then it's sent</span><span lang="it">Oppure senza controllo: una barretta verde e parte da sola</span></li>
+            <li><span lang="en">Approve once with Enter or deny with Esc; long commands scroll with the mouse wheel</span><span lang="it">Via libera con Invio, nega con Esc; i comandi lunghi si scorrono con la rotellina</span></li>
+            <li><span lang="en">Click the eyes to open the full chat and see everything</span><span lang="it">Clicchi sugli occhi e si apre la chat completa, con tutto il dettaglio</span></li>
+          </ul>
+        </div>
+        <div class="shot"><img lang="en" src="images/compact-voice.en.gif" alt="Compact voice: question, approval and reply inside the notch" loading="lazy"><img lang="it" src="images/compact-voice.it.gif" alt="Voce compatta: domanda, via libera e risposta dentro la tacca" loading="lazy"></div>
+      </div>
+
+      <div class="feat flip">
+        <div>
           <span class="tag"><span lang="en">Settings</span><span lang="it">Impostazioni</span></span>
           <h3><span lang="en">Everything in one small panel</span><span lang="it">Tutto in un piccolo pannello</span></h3>
           <p><span lang="en">Connect to Hermes with an address and a key, test it, choose the voice, the size of the island, the shortcuts. Nothing changes until you press Save.</span><span lang="it">Ti colleghi a Hermes con indirizzo e chiave, provi la connessione, scegli voce, grandezza dell'isola e scorciatoie. Non cambia niente finché non premi Salva.</span></p>
           <ul>
             <li><span lang="en">Keys go to the Windows Credential Manager, never to a file</span><span lang="it">Le chiavi vanno nel Gestore credenziali di Windows, mai in un file</span></li>
-            <li><span lang="en">A small dot tells you when a new version is out: nothing installs by itself</span><span lang="it">Un pallino ti avvisa quando esce una versione nuova: non si installa niente da solo</span></li>
+            <li><span lang="en">English or Italian, and the island size in fine steps</span><span lang="it">Italiano o inglese, e la grandezza dell'isola a piccoli passi</span></li>
+            <li><span lang="en">Checks for a new version twice a day and shows a small dot: nothing installs by itself</span><span lang="it">Controlla due volte al giorno se c'è una versione nuova e mostra un pallino: non si installa niente da solo</span></li>
           </ul>
         </div>
         <div class="shot"><img src="images/settings.png" alt="Settings panel" loading="lazy"></div>
@@ -155,7 +172,7 @@
       <div class="sh">
         <span class="eyebrow"><span lang="en">Personality</span><span lang="it">Personalità</span></span>
         <h2><span lang="en">It has a life of its own</span><span lang="it">Ha una vita sua</span></h2>
-        <p><span lang="en">It blinks, looks around and follows your mouse — sometimes eagerly, sometimes it couldn't care less. Leave it alone and it takes a nap. Every now and then, a surprise: more than 50 little animations, with holidays from around the world and greetings that change with the time of day.</span><span lang="it">Sbatte le palpebre, si guarda intorno e segue il mouse: a volte con attenzione, a volte se ne frega. Se lo lasci stare si appisola. Ogni tanto, una sorpresa: più di 50 piccole animazioni, con feste da tutto il mondo e saluti che cambiano con l'ora.</span></p>
+        <p><span lang="en">It blinks, looks around and follows your mouse — sometimes eagerly, sometimes it couldn't care less. Leave it alone and it takes a nap. Every now and then, a surprise: more than 150 little animations, with holidays from around the world and greetings that change with the time of day.</span><span lang="it">Sbatte le palpebre, si guarda intorno e segue il mouse: a volte con attenzione, a volte se ne frega. Se lo lasci stare si appisola. Ogni tanto, una sorpresa: più di 150 piccole animazioni, con feste da tutto il mondo e saluti che cambiano con l'ora.</span></p>
       </div>
       <div class="eggs" id="eggsGrid"></div>
       <div class="btns" style="margin-top:26px">

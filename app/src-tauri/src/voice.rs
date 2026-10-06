@@ -37,14 +37,14 @@ impl Recorder {
             let dev = match host.default_input_device() {
                 Some(d) => d,
                 None => {
-                    let _ = ready_tx.send(Err("Nessun microfono trovato".into()));
+                    let _ = ready_tx.send(Err(crate::settings::t("Nessun microfono trovato", "No microphone found")));
                     return Ok(());
                 }
             };
             let cfg = match dev.default_input_config() {
                 Ok(c) => c,
                 Err(e) => {
-                    let _ = ready_tx.send(Err(format!("Microfono non utilizzabile: {e}")));
+                    let _ = ready_tx.send(Err(format!("{}: {e}", crate::settings::t("Microfono non utilizzabile", "Microphone not usable"))));
                     return Ok(());
                 }
             };
@@ -81,19 +81,19 @@ impl Recorder {
                     None,
                 ),
                 f => {
-                    let _ = ready_tx.send(Err(format!("Formato audio del microfono non supportato: {f:?}")));
+                    let _ = ready_tx.send(Err(format!("{}: {f:?}", crate::settings::t("Formato audio del microfono non supportato", "Unsupported microphone audio format"))));
                     return Ok(());
                 }
             };
             let stream = match stream {
                 Ok(s) => s,
                 Err(e) => {
-                    let _ = ready_tx.send(Err(format!("Non riesco ad aprire il microfono: {e}")));
+                    let _ = ready_tx.send(Err(format!("{}: {e}", crate::settings::t("Non riesco ad aprire il microfono", "Can't open the microphone"))));
                     return Ok(());
                 }
             };
             if let Err(e) = stream.play() {
-                let _ = ready_tx.send(Err(format!("Non riesco ad avviare il microfono: {e}")));
+                let _ = ready_tx.send(Err(format!("{}: {e}", crate::settings::t("Non riesco ad avviare il microfono", "Can't start the microphone"))));
                 return Ok(());
             }
             let _ = ready_tx.send(Ok(()));
@@ -118,7 +118,7 @@ impl Recorder {
         match ready_rx.recv_timeout(Duration::from_secs(5)) {
             Ok(Ok(())) => Ok(Self { stop_tx, handle, samples, rate }),
             Ok(Err(e)) => Err(e),
-            Err(_) => Err("Il microfono non risponde".into()),
+            Err(_) => Err(crate::settings::t("Il microfono non risponde", "The microphone isn't responding")),
         }
     }
 
@@ -170,9 +170,9 @@ pub async fn download_model(app: AppHandle, name: String) -> Result<(), String> 
     let url = model_url(&name).ok_or("Modello sconosciuto")?;
     let dest = model_path(&app, &name);
     let part = dest.with_extension("part");
-    let r = reqwest::get(url).await.map_err(|e| format!("Download non riuscito: {e}"))?;
+    let r = reqwest::get(url).await.map_err(|e| format!("{}: {e}", crate::settings::t("Download non riuscito", "Download failed")))?;
     if !r.status().is_success() {
-        return Err(format!("Download non riuscito: {}", r.status()));
+        return Err(format!("{}: {}", crate::settings::t("Download non riuscito", "Download failed"), r.status()));
     }
     let total = r.content_length().unwrap_or(0);
     let mut f = tokio::fs::File::create(&part).await.map_err(|e| e.to_string())?;
@@ -180,7 +180,7 @@ pub async fn download_model(app: AppHandle, name: String) -> Result<(), String> 
     let mut last = -1i64;
     let mut stream = r.bytes_stream();
     while let Some(chunk) = stream.next().await {
-        let chunk = chunk.map_err(|e| format!("Download interrotto: {e}"))?;
+        let chunk = chunk.map_err(|e| format!("{}: {e}", crate::settings::t("Download interrotto", "Download interrupted")))?;
         f.write_all(&chunk).await.map_err(|e| e.to_string())?;
         got += chunk.len() as u64;
         if total > 0 {
@@ -225,13 +225,13 @@ pub fn unload_if_idle(minutes: u64) {
 
 pub fn transcribe_local(path: PathBuf, name: &str, language: &str, audio: &[f32]) -> Result<String, String> {
     if !path.exists() {
-        return Err("Modello non ancora scaricato (Impostazioni → Voce → testo → Scarica)".into());
+        return Err(crate::settings::t("Modello non ancora scaricato (Impostazioni → Voce → testo → Scarica)", "Model not downloaded yet (Settings → Speech to text → Download)"));
     }
     let mut guard = LOADED.lock().map_err(|_| "stato del modello non disponibile")?;
     if guard.as_ref().map(|m| m.name != name).unwrap_or(true) {
         *guard = None; // libera il vecchio prima di caricare il nuovo
         let ctx = WhisperContext::new_with_params(path.to_str().unwrap_or_default(), WhisperContextParameters::default())
-            .map_err(|e| format!("Non riesco a caricare il modello: {e}"))?;
+            .map_err(|e| format!("{}: {e}", crate::settings::t("Non riesco a caricare il modello", "Can't load the model")))?;
         *guard = Some(Loaded { name: name.to_string(), ctx, last_used: Instant::now() });
     }
     let loaded = guard.as_mut().unwrap();
@@ -246,7 +246,7 @@ pub fn transcribe_local(path: PathBuf, name: &str, language: &str, audio: &[f32]
     p.set_print_timestamps(false);
     p.set_suppress_blank(true);
     p.set_no_context(true);
-    state.full(p, audio).map_err(|e| format!("Trascrizione non riuscita: {e}"))?;
+    state.full(p, audio).map_err(|e| format!("{}: {e}", crate::settings::t("Trascrizione non riuscita", "Transcription failed")))?;
     let mut text = String::new();
     for seg in state.as_iter() {
         text.push_str(&seg.to_string());
@@ -290,7 +290,7 @@ fn wav(audio: &[f32]) -> Vec<u8> {
 pub async fn transcribe_server(kind: &str, url: &str, key: Option<String>, language: &str, audio: &[f32]) -> Result<String, String> {
     let url = url.trim().trim_end_matches('/');
     if url.is_empty() {
-        return Err("Indirizzo del server Whisper non impostato".into());
+        return Err(crate::settings::t("Indirizzo del server Whisper non impostato", "Whisper server address not set"));
     }
     let part = reqwest::multipart::Part::bytes(wav(audio)).file_name("audio.wav").mime_str("audio/wav").map_err(|e| e.to_string())?;
     let mut form = reqwest::multipart::Form::new().part("file", part).text("response_format", "json");
@@ -307,11 +307,11 @@ pub async fn transcribe_server(kind: &str, url: &str, key: Option<String>, langu
     if let Some(k) = key {
         rb = rb.bearer_auth(k);
     }
-    let r = rb.send().await.map_err(|e| format!("Server Whisper non raggiungibile: {e}"))?;
+    let r = rb.send().await.map_err(|e| format!("{}: {e}", crate::settings::t("Server Whisper non raggiungibile", "Whisper server can't be reached")))?;
     let status = r.status();
-    let v: serde_json::Value = r.json().await.map_err(|e| format!("Risposta del server Whisper non valida: {e}"))?;
+    let v: serde_json::Value = r.json().await.map_err(|e| format!("{}: {e}", crate::settings::t("Risposta del server Whisper non valida", "Invalid reply from the Whisper server")))?;
     if !status.is_success() {
-        return Err(format!("Il server Whisper ha risposto {status}"));
+        return Err(format!("{} {status}", crate::settings::t("Il server Whisper ha risposto", "The Whisper server replied")));
     }
     Ok(clean(v["text"].as_str().unwrap_or_default()))
 }

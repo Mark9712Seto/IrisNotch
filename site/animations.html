@@ -53,6 +53,8 @@ section{padding:56px 0;scroll-margin-top:110px}
 </footer>
 
 <script src="eyes.js"></script>
+<script src="eyes-nuove.js"></script>
+<script src="eyes-nuove2.js"></script>
 <script src="site.js"></script>
 <script>
 (function () {
@@ -102,6 +104,60 @@ section{padding:56px 0;scroll-margin-top:110px}
     ["stella", "Shooting star", "Stella cadente"], ["occhiali", "Sunglasses", "Occhiali da sole"], ["gattino", "Kitten", "Gattino"], ["lettura", "Reading", "Legge un libro"],
     ["palloncino", "Balloon", "Palloncino"], ["cuori", "Hearts", "Cuori"],
   ].map((x) => x.concat(bored)));
+  add(section("new", "New in 0.2.2", "Novità della 0.2.2", "About fifty new surprises, mixed in with the others at random.", "Una cinquantina di sorprese nuove, mescolate a caso con le altre."), [
+    ["arcobaleno", "Rainbow", "Arcobaleno"],
+    ["ombrello", "Umbrella", "Ombrello"],
+    ["temporale", "Thunderstorm", "Temporale"],
+    ["pesciolino", "Goldfish", "Pesciolino"],
+    ["razzo", "Rocket", "Razzo"],
+    ["ufo", "UFO", "UFO"],
+    ["yoyo", "Yo-yo", "Yo-yo"],
+    ["basket", "Hoop shot", "Canestro"],
+    ["palleggio", "Keepy-uppy", "Palleggio"],
+    ["tetris", "Tetris", "Tetris"],
+    ["invasori", "Space invaders", "Invasori spaziali"],
+    ["serpente", "Snake", "Serpente"],
+    ["commosso", "Moved to tears", "Commosso"],
+    ["strabico", "Cross-eyed", "Strabico"],
+    ["ciglia", "Long lashes", "Ciglia lunghe"],
+    ["baffi", "Moustache", "Baffi"],
+    ["magia", "Magic", "Magia"],
+    ["ape", "Bee", "Ape"],
+    ["lucciole", "Fireflies", "Lucciole"],
+    ["aeroplanino", "Paper plane", "Aeroplanino di carta"],
+    ["equilibrista", "Balancing act", "Equilibrista"],
+    ["gomma", "Bubble gum", "Gomma da masticare"],
+    ["dado", "Dice", "Dado"],
+    ["bowling", "Bowling", "Bowling"],
+    ["aquilone", "Kite", "Aquilone"],
+    ["girandola", "Pinwheel", "Girandola"],
+    ["treno", "Little train", "Trenino"],
+    ["macchinina", "Toy car", "Macchinina"],
+    ["elicottero", "Helicopter", "Elicottero"],
+    ["mongolfiera", "Hot-air balloon", "Mongolfiera"],
+    ["pianeta", "Ringed planet", "Pianeta con l'anello"],
+    ["lumaca", "Snail", "Lumaca"],
+    ["ragnetto", "Little spider", "Ragnetto"],
+    ["coccinella", "Ladybird", "Coccinella"],
+    ["uccellino", "Little bird", "Uccellino"],
+    ["medusa", "Jellyfish", "Medusa"],
+    ["occhistella", "Starry eyes", "Occhi a stella"],
+    ["dollari", "Dollar eyes", "Occhi a dollaro"],
+    ["nerd", "Nerd glasses", "Occhiali da secchione"],
+    ["festa", "Party hat", "Cappellino da festa"],
+    ["corona", "Crown", "Corona"],
+    ["supereroe", "Superhero", "Supereroe"],
+    ["ninja", "Ninja", "Ninja"],
+    ["puzzle", "Puzzle", "Puzzle"],
+    ["rubik", "Rubik's cube", "Cubo di Rubik"],
+    ["domino", "Dominoes", "Domino"],
+    ["pendolo", "Pendulum", "Pendolo"],
+    ["scambio", "Swap places", "Scambio di posto"],
+    ["corda", "Jump rope", "Salto della corda"],
+    ["hulahoop", "Hula hoop", "Hula hoop"],
+    ["singhiozzo", "Hiccups", "Singhiozzo"],
+    ["caldo", "So hot", "Che caldo"],
+  ].map((x) => x.concat(bored)));
   add(section("time", "Time of day", "L'ora del giorno", "When you open the island, once per part of the day.", "Quando apri l'isola, una volta per fascia."), [
     ["occhiaie", "Deep night", "Notte fonda", "00:30 – 4:00", "00:30 – 4:00"], ["alba", "Very early", "Prestissimo", "4:00 – 6:30", "4:00 – 6:30"],
     ["caffe", "Morning coffee", "Caffè del mattino", "6:30 – 9:30", "6:30 – 9:30"], ["stiracchiata", "Stretch", "Stiracchiata", "17:00 – 19:00", "17:00 – 19:00"],
@@ -127,10 +183,26 @@ section{padding:56px 0;scroll-margin-top:110px}
     ["torta", "Your birthday", "Il tuo compleanno", "the day you set", "il giorno che imposti"], ["coriandoli", "Confetti", "Coriandoli", "your birthday", "il tuo compleanno"],
     ["luna", "Full moon", "Luna piena", "full-moon nights", "notti di luna piena"], ["gattonero", "Friday the 17th", "Venerdì 17", "unlucky in Italy", "in Italia porta sfortuna"],
   ]);
-  add(section("reactions", "Reactions", "Reazioni", "Poke the eyes three times, shake the mouse, or leave the PC alone for a while.", "Tocca gli occhi tre volte, scuoti il mouse, o lascia il PC fermo per un po'."), [
+  add(section("reactions", "Reactions", "Reazioni", "Poke it, stroke it, drag it, drop it, or leave the PC alone for a while.", "Toccalo, accarezzalo, trascinalo, lascialo cadere, o lascia il PC fermo per un po'."), [
     ["solletico", "Tickled", "Solletico", "poke it 3 times", "toccalo 3 volte"], ["giramento", "Dizzy", "Giramento di testa", "mouse flying around", "mouse velocissimo"],
     ["pisolino", "Nap", "Pisolino", "12 minutes idle", "12 minuti fermo"],
+    ["carezza", "Stroke", "Carezza", "move the mouse gently back and forth over the eyes", "passa il mouse piano avanti e indietro sugli occhi"],
+    ["vento", "Headwind", "Controvento", "drag it really fast", "trascinalo molto veloce"],
+    ["atterraggio", "Landing", "Atterraggio", "let go after dragging it", "lascialo andare dopo averlo trascinato"],
+    ["risveglio", "Startled awake", "Svegliato di colpo", "click it while it sleeps", "cliccalo mentre dorme"],
+    ["posta", "You've got mail", "Posta in arrivo", "a reply arrives while the island is closed", "arriva una risposta a isola chiusa"],
+    ["bentornato", "Welcome back", "Bentornato", "back at the PC after 30+ minutes", "torni al PC dopo più di mezz'ora"],
   ]);
+  const wake = ["waking from the nap", "al risveglio dal pisolino"];
+  add(section("wake", "Waking up", "Risveglio", "After the nap, the first mouse move wakes it up, each time in a different way.", "Dopo il pisolino, al primo movimento del mouse si sveglia, ogni volta in un modo diverso."), [
+    ["sveglia", "Alarm clock", "Sveglia"],
+    ["risv_spavento", "Startled jump", "Salto dallo spavento"],
+    ["risv_stropiccia", "Rubbing its eyes", "Si stropiccia gli occhi"],
+    ["risv_sbadiglio", "Yawn and stretch", "Sbadiglio e stiracchiata"],
+    ["risv_chi", "Where am I?", "Chi è? Dove sono?"],
+    ["risv_bolla", "Sleep bubble pops", "Bolla che scoppia"],
+    ["risv_testa", "Nodding off", "Testa che cade"],
+  ].map((x) => x.concat(wake)));
 })();
 </script>
 </body>

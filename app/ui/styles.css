@@ -145,6 +145,10 @@ body.demo .demo-bar{display:flex;position:fixed;left:50%;bottom:16px;transform:t
 .approval{border-color:var(--warn);box-shadow:0 0 0 1px rgba(251,113,133,.15),0 0 26px -10px var(--warn)}
 .approval .card-h i{color:var(--warn)}
 .ap-desc{color:#d9dcea;margin-bottom:6px}
+/* descrizione e comando lunghi scorrono dentro la scheda: i pulsanti restano sempre visibili */
+.approval.show{display:flex;flex-direction:column;min-height:0;flex-shrink:1}
+.ap-scroll{flex:0 1 auto;min-height:48px;max-height:230px;overflow-y:auto;margin:0 -6px 8px 0;padding-right:6px;user-select:text}
+.ap-scroll code{margin-bottom:0}
 .approval code{display:block;background:#160d10;border:1px solid #3a1820;color:#fda4af;border-radius:9px;padding:7px 9px;font:12px/1.4 Consolas,ui-monospace,monospace;white-space:pre-wrap;word-break:break-all;margin-bottom:8px;user-select:text}
 .row2{display:flex;gap:8px;align-items:center}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:1;padding:8px 10px;border-radius:11px;background:#1b1e2b;font-weight:500}
@@ -204,6 +208,30 @@ label input[type=range]{display:block;width:100%;margin-top:6px;accent-color:var
 /* chiusa e a riposo: solo gli occhi, al centro */
 .island.collapsed:not(.active) .bar{justify-content:center;padding:0}
 .island.collapsed:not(.active) .status{display:none}
+/* voce compatta: la tacca si allunga solo per l'anteprima di quello che ha capito e per la risposta scritta */
+.mini{display:none;position:absolute;left:22px;right:22px;top:calc(var(--barh, 38px) + 6px);opacity:0;transition:opacity .25s .12s}
+.island.has-mini.collapsed .mini{display:block;opacity:1}
+.island.has-mini.collapsed .status{display:none}
+.mini-q{display:none;font-size:11.5px;color:#7a819a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
+.mini-txt{font-size:14.5px;line-height:1.42;color:#eef1f8;max-height:42px;overflow:hidden;transition:transform .5s cubic-bezier(.6,-.25,.7,.25),opacity .42s;transform-origin:50% 0;user-select:text}
+.mini-txt.eaten{transform:translate(0,-44px) scale(.04);opacity:0}
+.mini-row{display:flex;align-items:center;gap:8px;margin-top:10px}
+.mini-keys{flex:1;min-width:0;font-size:11.5px;line-height:1.45;color:#8b92aa}
+.mini-keys kbd{font:500 10.5px Consolas,ui-monospace,monospace;background:#151a27;border:1px solid #2a3147;border-bottom-width:2px;border-radius:5px;padding:0 4px;color:#dbe3f3}
+.mini-ok,.mini-no{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:#1b1e2b;flex:none}
+.mini-ok{background:#4ade80;color:#03140a}
+.mini-ok i,.mini-no i{width:15px;height:15px}
+.mini-timer{display:none;height:4px;border-radius:2px;background:#1b2130;margin-top:12px;overflow:hidden}
+.mini-timer i{display:block;height:100%;width:100%;background:#4ade80;border-radius:2px}
+.mini-foot{display:none;font-size:11.5px;color:#8b92aa;margin-top:8px}
+.island.mini-auto .mini-row{display:none}.island.mini-auto .mini-timer,.island.mini-auto .mini-foot{display:block}
+.island.mini-reply .mini-q,.island.mini-reply .mini-foot{display:block}.island.mini-reply .mini-row{display:none}
+/* risposta nella tacca: si scorre con la rotellina, dentro le stesse misure; sfuma sopra e sotto quando c'è altro testo */
+.island.mini-reply .mini-txt,.island.mini-ap .mini-txt{max-height:66px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;transition:none}
+.island.mini-reply .mini-txt::-webkit-scrollbar,.island.mini-ap .mini-txt::-webkit-scrollbar{display:none}
+.island.mini-reply .mini-txt.fade-bot,.island.mini-ap .mini-txt.fade-bot{-webkit-mask:linear-gradient(#000 68%,transparent)}
+.island.mini-reply .mini-txt.fade-top,.island.mini-ap .mini-txt.fade-top{-webkit-mask:linear-gradient(transparent,#000 32%)}
+.island.mini-reply .mini-txt.fade-top.fade-bot,.island.mini-ap .mini-txt.fade-top.fade-bot{-webkit-mask:linear-gradient(transparent,#000 30%,#000 70%,transparent)}
 
 /* voce locale */
 .row2.wrap{flex-wrap:wrap;margin-bottom:9px}
@@ -226,7 +254,10 @@ label input[type=file]{display:block;margin-top:6px;font-size:12px;color:var(--m
 .upd.show{display:flex}
 .upd span:nth-child(2){flex:1;min-width:0}
 .set-f{display:flex;align-items:center;gap:10px}
-.ver{margin-left:auto;font-size:11.5px;color:var(--muted)}
+.ver{margin-left:auto;font-size:11.5px;color:var(--muted);display:flex;flex-direction:column;align-items:flex-end;gap:1px;line-height:1.25}
+.newver{display:none;font-size:11.5px;color:#4ade80;padding:0;text-decoration:underline;text-underline-offset:2px}
+.newver.show{display:block}
+.newver:hover{color:#86efac}
 .about .about-name{margin:0 0 6px;font-size:13px}
 .about .help{margin:0 0 8px}
 
@@ -313,3 +344,6 @@ input.keycap.rec{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in sr
 .sel select{appearance:none;-webkit-appearance:none;width:100%;padding-right:30px}
 .sel .chev{position:absolute;right:10px;top:50%;width:15px;height:15px;margin-top:-7.5px;color:var(--muted);pointer-events:none}
 .sel.open .chev{transform:rotate(90deg);color:var(--fg)}
+/* via libera nella tacca */
+.island.mini-ap .mini-q{color:#e3e7f2;font-size:12.5px;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-bottom:6px}
+.island.mini-ap .mini-txt.code{font:12.5px/1.5 Consolas,ui-monospace,monospace;color:#fda4af;white-space:pre-wrap;word-break:break-word;border-left:2px solid var(--warn);padding-left:10px}

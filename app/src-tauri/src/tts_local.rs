@@ -17,12 +17,14 @@ use tauri::{AppHandle, Emitter, Manager};
 
 const PIPER_ZIP: &str = "https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_windows_amd64.zip";
 const PIPER_TGZ: &str = "https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_linux_x86_64.tar.gz";
-const VOICES_URL: &str = "https://huggingface.co/rhasspy/piper-voices/resolve/main/it/it_IT/";
+const VOICES_URL: &str = "https://huggingface.co/rhasspy/piper-voices/resolve/main/";
 
-/// (id, nome mostrato, percorso su Hugging Face, MB)
-pub const VOICES: &[(&str, &str, &str, u32)] = &[
-    ("paola", "Paola · donna", "paola/medium/it_IT-paola-medium", 61),
-    ("riccardo", "Riccardo · uomo, più leggera", "riccardo/x_low/it_IT-riccardo-x_low", 27),
+/// (id, lingua, nome mostrato in italiano, in inglese, percorso su Hugging Face, MB)
+pub const VOICES: &[(&str, &str, &str, &str, &str, u32)] = &[
+    ("paola", "it", "Paola · donna", "Paola · female", "it/it_IT/paola/medium/it_IT-paola-medium", 61),
+    ("riccardo", "it", "Riccardo · uomo, più leggera", "Riccardo · male, lighter", "it/it_IT/riccardo/x_low/it_IT-riccardo-x_low", 27),
+    ("lessac", "en", "Lessac · donna (inglese US)", "Lessac · female (US English)", "en/en_US/lessac/medium/en_US-lessac-medium", 61),
+    ("ryan", "en", "Ryan · uomo (inglese US)", "Ryan · male (US English)", "en/en_US/ryan/medium/en_US-ryan-medium", 61),
 ];
 pub const DEFAULT_VOICE: &str = "paola";
 
@@ -92,7 +94,7 @@ fn dir_size(p: &std::path::Path) -> u64 {
 pub fn remove_old(app: &AppHandle) -> Result<(), String> {
     let p = old_qwen(app);
     if p.exists() {
-        std::fs::remove_dir_all(&p).map_err(|e| format!("Non riesco a eliminare {}: {e}", p.display()))?;
+        std::fs::remove_dir_all(&p).map_err(|e| format!("{} {}: {e}", crate::settings::t("Non riesco a eliminare", "Can't delete"), p.display()))?;
         crate::log::write(app, "info", "eliminata la vecchia voce Qwen3-TTS");
     }
     Ok(())
@@ -109,7 +111,10 @@ pub fn status(app: &AppHandle, st: &LocalTts) -> Value {
 }
 
 pub fn voices(app: &AppHandle) -> Value {
-    json!(VOICES.iter().map(|(id, name, _, mb)| json!({ "id": id, "name": name, "mb": mb, "downloaded": has_voice(app, id) })).collect::<Vec<_>>())
+    json!(VOICES
+        .iter()
+        .map(|(id, lang, it, en, _, mb)| json!({ "id": id, "lang": lang, "name": if crate::settings::en() { en } else { it }, "mb": mb, "downloaded": has_voice(app, id) }))
+        .collect::<Vec<_>>())
 }
 
 fn progress(app: &AppHandle, frac: Option<f64>, msg: &str) {
@@ -120,21 +125,21 @@ fn progress(app: &AppHandle, frac: Option<f64>, msg: &str) {
 
 async fn download(app: &AppHandle, url: &str, label: &str) -> Result<Vec<u8>, String> {
     use futures_util::StreamExt;
-    let r = reqwest::get(url).await.map_err(|e| format!("Download non riuscito ({label}): {e}"))?;
+    let r = reqwest::get(url).await.map_err(|e| format!("{} ({label}): {e}", crate::settings::t("Download non riuscito", "Download failed")))?;
     if !r.status().is_success() {
-        return Err(format!("Download non riuscito ({label}): risposta {}", r.status()));
+        return Err(format!("{} ({label}): {}", crate::settings::t("Download non riuscito", "Download failed"), r.status()));
     }
     let total = r.content_length().unwrap_or(0);
     let mut data = Vec::with_capacity(total as usize);
     let mut stream = r.bytes_stream();
     let mut last = Instant::now();
     while let Some(chunk) = stream.next().await {
-        let chunk = chunk.map_err(|e| format!("Download interrotto ({label}): {e}"))?;
+        let chunk = chunk.map_err(|e| format!("{} ({label}): {e}", crate::settings::t("Download interrotto", "Download interrupted")))?;
         data.extend_from_slice(&chunk);
         if last.elapsed() > Duration::from_millis(200) {
             last = Instant::now();
             let f = if total > 0 { Some(data.len() as f64 / total as f64) } else { None };
-            progress(app, f, &format!("Scarico {label}… {} MB", data.len() / 1_048_576));
+            progress(app, f, &format!("{} {label}… {} MB", crate::settings::t("Scarico", "Downloading"), data.len() / 1_048_576));
         }
     }
     Ok(data)
@@ -146,7 +151,7 @@ pub async fn install(app: AppHandle, voice: String) -> Result<(), String> {
     {
         let mut i = st.installing.lock().unwrap();
         if *i {
-            return Err("Installazione già in corso".into());
+            return Err(crate::settings::t("Installazione già in corso", "Installation already running"));
         }
         *i = true;
     }
@@ -162,38 +167,38 @@ async fn install_inner(app: &AppHandle, voice: &str) -> Result<(), String> {
     let b = base(app);
     if !exe(app).exists() {
         if cfg!(windows) {
-            let zip = download(app, PIPER_ZIP, "il programma Piper").await?;
-            progress(app, None, "Estraggo Piper…");
+            let zip = download(app, PIPER_ZIP, &crate::settings::t("il programma Piper", "the Piper program")).await?;
+            progress(app, None, &crate::settings::t("Estraggo Piper…", "Extracting Piper…"));
             let mut z = zip::ZipArchive::new(std::io::Cursor::new(zip)).map_err(|e| e.to_string())?;
-            z.extract(&b).map_err(|e| format!("Estrazione di Piper non riuscita: {e}"))?;
+            z.extract(&b).map_err(|e| format!("{}: {e}", crate::settings::t("Estrazione di Piper non riuscita", "Extracting Piper failed")))?;
         } else {
             // sviluppo su Linux: archivio .tar.gz, estratto con tar
-            let tgz = download(app, PIPER_TGZ, "il programma Piper").await?;
+            let tgz = download(app, PIPER_TGZ, &crate::settings::t("il programma Piper", "the Piper program")).await?;
             let f = b.join("piper.tgz");
             std::fs::write(&f, tgz).map_err(|e| e.to_string())?;
             let ok = Command::new("tar").arg("xzf").arg(&f).current_dir(&b).status().map(|s| s.success()).unwrap_or(false);
             let _ = std::fs::remove_file(&f);
             if !ok {
-                return Err("Estrazione di Piper non riuscita".into());
+                return Err(crate::settings::t("Estrazione di Piper non riuscita", "Extracting Piper failed"));
             }
         }
         if !exe(app).exists() {
-            return Err("Piper scaricato, ma non trovo il programma nell'archivio".into());
+            return Err(crate::settings::t("Piper scaricato, ma non trovo il programma nell'archivio", "Piper downloaded, but the program isn't in the archive"));
         }
     }
     if !has_voice(app, voice) {
-        let (_, name, path, _) = VOICES.iter().find(|v| v.0 == voice).unwrap();
+        let (_, _, name, _, path, _) = VOICES.iter().find(|v| v.0 == voice).unwrap();
         let dir = b.join("voci");
         std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
-        let json_data = download(app, &format!("{VOICES_URL}{path}.onnx.json"), "la scheda della voce").await?;
-        let model = download(app, &format!("{VOICES_URL}{path}.onnx"), &format!("la voce {}", name.split(' ').next().unwrap_or(voice))).await?;
+        let json_data = download(app, &format!("{VOICES_URL}{path}.onnx.json"), &crate::settings::t("la scheda della voce", "the voice details")).await?;
+        let model = download(app, &format!("{VOICES_URL}{path}.onnx"), &format!("{} {}", crate::settings::t("la voce", "the voice"), name.split(' ').next().unwrap_or(voice))).await?;
         // prima il modello in un file temporaneo, poi i nomi definitivi: una voce a metà non risulta mai "scaricata"
         let tmp = dir.join(format!("{voice}.onnx.part"));
         std::fs::write(&tmp, model).map_err(|e| e.to_string())?;
         std::fs::write(voice_file(app, voice).with_extension("onnx.json"), json_data).map_err(|e| e.to_string())?;
         std::fs::rename(&tmp, voice_file(app, voice)).map_err(|e| e.to_string())?;
     }
-    progress(app, Some(1.0), "Voce locale pronta");
+    progress(app, Some(1.0), &crate::settings::t("Voce locale pronta", "Local voice ready"));
     Ok(())
 }
 
@@ -201,7 +206,7 @@ async fn install_inner(app: &AppHandle, voice: &str) -> Result<(), String> {
 
 fn start(app: &AppHandle, voice: &str) -> Result<Engine, String> {
     if !exe(app).exists() || !has_voice(app, voice) {
-        return Err("La voce locale non è installata (Impostazioni → Testo → voce → Sul mio PC)".into());
+        return Err(crate::settings::t("La voce locale non è installata (Impostazioni → Testo → voce → Sul mio PC)", "The local voice isn't installed (Settings → Text to speech → On my PC)"));
     }
     let tmp = std::env::temp_dir().join("iris-notch-voce");
     let _ = std::fs::create_dir_all(&tmp);
@@ -218,7 +223,7 @@ fn start(app: &AppHandle, voice: &str) -> Result<Engine, String> {
         }
         None => Stdio::null(),
     };
-    let mut child = quiet(&mut cmd).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(err).spawn().map_err(|e| format!("Non riesco ad avviare la voce locale: {e}"))?;
+    let mut child = quiet(&mut cmd).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(err).spawn().map_err(|e| format!("{}: {e}", crate::settings::t("Non riesco ad avviare la voce locale", "Can't start the local voice")))?;
     let stdin = child.stdin.take().ok_or("stdin di Piper non disponibile")?;
     let out = BufReader::new(child.stdout.take().ok_or("stdout di Piper non disponibile")?);
     Ok(Engine { child, stdin, out, voice: voice.to_string() })
@@ -233,10 +238,10 @@ fn say(e: &mut Engine, text: &str) -> Result<Vec<u8>, String> {
     writeln!(e.stdin, "{line}").and_then(|_| e.stdin.flush()).map_err(|_| "La voce locale si è chiusa".to_string())?;
     let mut answer = String::new();
     if e.out.read_line(&mut answer).map_err(|e| e.to_string())? == 0 {
-        return Err("La voce locale si è chiusa (dettagli in logs/voce-locale.log)".into());
+        return Err(crate::settings::t("La voce locale si è chiusa (dettagli in logs/voce-locale.log)", "The local voice closed (details in logs/voce-locale.log)"));
     }
     let path = PathBuf::from(answer.trim());
-    let data = std::fs::read(&path).map_err(|err| format!("Non trovo l'audio della voce locale: {err}"))?;
+    let data = std::fs::read(&path).map_err(|err| format!("{}: {err}", crate::settings::t("Non trovo l'audio della voce locale", "Can't find the local voice audio")))?;
     let _ = std::fs::remove_file(&path);
     Ok(data)
 }
@@ -253,9 +258,18 @@ fn wav_seconds(w: &[u8]) -> f64 {
 pub async fn speak(app: &AppHandle, text: &str, voice: &str, _speed: f32) -> Result<Vec<u8>, String> {
     let text = text.split_whitespace().collect::<Vec<_>>().join(" ");
     if text.is_empty() {
-        return Err("Niente da leggere".into());
+        return Err(crate::settings::t("Niente da leggere", "Nothing to read"));
     }
-    let (app2, voice) = (app.clone(), voice_id(voice).to_string());
+    // la voce scelta non è ancora scaricata (per esempio appena cambiata lingua): si usa una già presente,
+    // prima della stessa lingua, così si sente comunque qualcosa invece di un errore
+    let mut voice = voice_id(voice).to_string();
+    if !has_voice(app, &voice) {
+        let lang = VOICES.iter().find(|v| v.0 == voice).map(|v| v.1).unwrap_or("it");
+        if let Some(v) = VOICES.iter().filter(|v| has_voice(app, v.0)).min_by_key(|v| (v.1 != lang) as u8) {
+            voice = v.0.to_string();
+        }
+    }
+    let app2 = app.clone();
     tauri::async_runtime::spawn_blocking(move || {
         let st = app2.state::<LocalTts>();
         *st.last_used.lock().unwrap() = Instant::now();
@@ -283,7 +297,7 @@ pub async fn speak(app: &AppHandle, text: &str, voice: &str, _speed: f32) -> Res
                 }
             }
         }
-        Err("La voce locale non risponde".into())
+        Err(crate::settings::t("La voce locale non risponde", "The local voice isn't responding"))
     })
     .await
     .map_err(|e| e.to_string())?

@@ -2,6 +2,8 @@ name: Build
 
 on:
   push:
+    # l'app per il telefono e le prove grafiche non toccano l'installer di Windows
+    paths-ignore: ["mobile/**", "design/**", ".github/workflows/android-prova.yml"]
   workflow_dispatch:
     inputs:
       release:

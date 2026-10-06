@@ -2,6 +2,17 @@
 
 *Italiano più sotto ↓*
 
+## v0.2.2 — 2026-10-05
+
+- **Compact voice:** with the island closed, hold the shortcut and talk without opening the chat. The notch stretches just enough to show what it heard: Enter (or a tap of the shortcut) sends, Esc cancels, hold it again to redo. Approvals are asked right in the notch (Enter allows once, Esc denies, long commands scroll with the mouse wheel), and the reply shows up there too. Click the eyes to open the full chat. On by default; it can be turned off in Speech to text.
+- **Quieter update check:** twice a day; a small dot on the settings icon and "New version" under the version number, both gone once you've seen them.
+- **English or Italian:** Settings → General → Language. The first time, the app follows the Windows language. Interface, messages, the tray menu, transcription and local voices (new English voices: Lessac and Ryan) all follow it.
+- **About 100 new animations:** new versions of every state (listening, thinking, using a tool, answering, done, approval, error, asleep) and many new surprises (rainbow, rocket, UFO, Tetris, space invaders, snake, kite, little train, hot-air balloon, jellyfish, Rubik's cube, dominoes and more). The kitten, Carnival, the Italian air-show jets and summer were redrawn.
+- **Waking up and reactions:** after a nap it wakes up in one of several ways (alarm clock, startled jump, big yawn, "where am I?"…), and says welcome back after a long break. New reactions: stroke it, drag it fast, drop it, click it while it sleeps, or get a reply while the island is closed.
+- **Size in finer steps:** from −3 to +4 (0 is normal); +4 is a bit bigger than the old "Large".
+- **Approval card:** long descriptions and commands scroll inside the card, and the buttons are always visible.
+- The thinking dots are now in a straight row. Hermes Agent 0.21 or newer is needed to keep the conversation context.
+
 ## v0.2.1 — 2026-10-04
 
 - **Clearer live replies:** while Iris works, each piece of text gets its own bubble with the actions in between, the same as when you reopen the chat (before, the text piled up in one bubble with gaps and the actions in a wall below).
@@ -25,6 +36,17 @@ First public release: the notch and the bubble, chat and sessions with Hermes, a
 ---
 
 ## Italiano
+
+### v0.2.2 — 05/10/2026
+
+- **Voce compatta:** a isola chiusa tieni premuta la scorciatoia e parli senza aprire la chat. La tacca si allunga quel tanto che basta per mostrarti cosa ha capito: Invio (o un tocco della scorciatoia) manda, Esc annulla, tienila premuta per rifare. Il via libera si dà direttamente nella tacca (Invio una volta, Esc nega, i comandi lunghi si scorrono con la rotellina) e anche la risposta arriva lì. Cliccando sugli occhi si apre la chat completa. Accesa di serie, si spegne in Voce → testo.
+- **Controllo aggiornamenti più discreto:** due volte al giorno; un pallino sull'icona delle impostazioni e "Nuova versione" sotto il numero di versione, che spariscono una volta visti.
+- **Italiano o inglese:** Impostazioni → Generale → Lingua. La prima volta segue la lingua di Windows. Cambiano interfaccia, messaggi, menu dell'icona, trascrizione e voci locali (nuove voci inglesi: Lessac e Ryan).
+- **Circa 100 animazioni nuove:** nuove versioni di tutti gli stati (ascolta, pensa, usa uno strumento, risponde, fatto, via libera, errore, dorme) e tante sorprese nuove (arcobaleno, razzo, UFO, Tetris, invasori spaziali, serpente, aquilone, trenino, mongolfiera, medusa, cubo di Rubik, domino e altre). Rifatti il gattino, il Carnevale, le Frecce Tricolori e l'estate.
+- **Risveglio e reazioni:** dopo il pisolino si sveglia in tanti modi diversi (sveglia, salto dallo spavento, sbadiglio, "dove sono?"…) e ti dà il bentornato dopo una pausa lunga. Reazioni nuove: carezza, trascinata veloce, atterraggio, clic mentre dorme, risposta arrivata a isola chiusa.
+- **Dimensione a passi più fini:** da −3 a +4 (0 è la normale); +4 è un po' più grande della vecchia "Grande".
+- **Scheda del via libera:** descrizioni e comandi lunghi scorrono dentro la scheda, i pulsanti restano sempre visibili.
+- I puntini del "sto pensando" ora sono dritti, in fila. Per tenere il contesto delle conversazioni serve Hermes Agent 0.21 o più recente.
 
 ### v0.2.1 — 04/10/2026
 

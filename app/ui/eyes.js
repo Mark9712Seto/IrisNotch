@@ -145,7 +145,7 @@
     // starnuto: "ah… ah…" e poi "etciù!"
     starnuto: {
       dur: 4200, color: null, auto: true,
-      init(o, g) { g.drops = Array.from({ length: 7 }, () => mk(o.r.fx, "circle", { r: 0.9, fill: "#7dd3fc", opacity: 0 })); g.txt = mk(o.r.fx, "text", { x: o.island ? 92 : 74, y: o.island ? 52 : 46, "font-size": 6.5, "font-weight": 700, "font-family": "system-ui", fill: "currentColor", opacity: 0 }); g.txt.textContent = "etciù!"; },
+      init(o, g) { g.drops = Array.from({ length: 7 }, () => mk(o.r.fx, "circle", { r: 0.9, fill: "#7dd3fc", opacity: 0 })); g.txt = mk(o.r.fx, "text", { x: o.island ? 92 : 74, y: o.island ? 52 : 46, "font-size": 6.5, "font-weight": 700, "font-family": "system-ui", fill: "currentColor", opacity: 0 }); g.txt.textContent = Iris.lang === "en" ? "achoo!" : "etciù!"; },
       t(o, T, k, s) {
         if (k < 0.55) { const q = k / 0.55; for (const e of [T.L, T.R]) { e.lt = 0.1 + 0.5 * q; e.dy = -2 * q; e.dx += Math.sin(s * 30) * 0.3 * q; } T.body.y -= 3 * q; T.body.sy = 1 + 0.04 * q; }
         else if (k < 0.66) { for (const e of [T.L, T.R]) { e.lt = 1; e.sc = 0.9; } T.body.y += 4; T.body.sy = 0.94; }
@@ -256,10 +256,6 @@
         init(o, g) { g.m = mk(o.r.vfx, "rect", { fill: "currentColor" }); },
         t(o, T) { for (const e of [T.L, T.R]) { e.h = 16; e.dy = -3; } T.body.y = 0; },
         draw(o, t, ts, s, lvl, g) { const v = Math.abs(Math.sin(s * 11)) * Math.abs(Math.sin(s * 3.1 + 1)), h = 1.2 + v * 5, w = 7 + v * 2; g.m.setAttribute("x", f2(60 - w / 2)); g.m.setAttribute("y", f2(72.5 - h / 2)); g.m.setAttribute("width", f2(w)); g.m.setAttribute("height", f2(h)); g.m.setAttribute("rx", f2(Math.min(h, w) / 2)); } },
-      { name: "Onde verso di te", desc: "Occhi felici e onde che partono verso destra, come la voce che esce.",
-        init(o, g) { g.w = [0, 1, 2].map(() => mk(o.r.vfx, "path", { d: "M0 -5 Q3.5 0 0 5", fill: "none", stroke: "currentColor", "stroke-width": 1.6, "stroke-linecap": "round" })); },
-        t(o, T, ts, s) { const y = Math.abs(Math.sin(s * 7.5)); for (const e of [T.L, T.R]) { e.lb = 0.3; e.dy = -y; } },
-        draw(o, t, ts, s, lvl, g) { g.w.forEach((w, i) => { const k = (s * 1.4 + i / 3) % 1; w.setAttribute("transform", `translate(${f2(86 + k * 40)} ${CY(o)}) scale(${f2(0.8 + k * 0.6)})`); w.setAttribute("opacity", f2(1 - k)); }); } },
     ],
     done: [
       { name: "Classico", desc: "Occhi felici e un saltello." },
@@ -297,6 +293,8 @@
   // "Giro" del pensiero: cambia solo lo sguardo
   VARIANTS.thinking[1].t = (o, T, ts, s) => { for (const e of [T.L, T.R]) { e.dx = Math.cos(s * 1.8) * 4.5; e.dy = Math.sin(s * 1.8) * 3 - 1.5; e.lt = 0.08; e.h = 19; } };
   Iris.VARIANTS = VARIANTS;
+  // attrezzi di disegno condivisi con le animazioni in file a parte (eyes-nuove.js)
+  Iris._fx = { mk, clamp, CY, BX, W, prand, f2, STAR, HEART };
 
   /* ---------- easter egg nuovi (proposte del 03/10, sera) ---------- */
   Object.assign(EGGS, {
@@ -343,19 +341,24 @@
       t(o, T, k) { const p = this.pos(o, k); if (k > 0.1 && k < 0.5) { for (const [e, cx] of [[T.L, 46], [T.R, 74]]) { e.dx = clamp((p.x - cx) * 0.12, -5, 5); e.dy = -3; e.w = 17; e.h = 24; e.rr = 8.5; } } else if (k >= 0.55 && k < 0.92) { for (const e of [T.L, T.R]) { e.lb = 0.6; e.lt = 0.2; } } },
       draw(o, t, k, s, a, g) { const p = this.pos(o, k), on = p.q > 0 && p.q < 1; g.st.setAttribute("transform", `translate(${f2(p.x)} ${f2(p.y)}) scale(0.9)`); g.st.setAttribute("opacity", on ? "1" : "0"); g.tail.setAttribute("d", `M${f2(p.x - 16)} ${f2(p.y - 3.5)} L${f2(p.x)} ${f2(p.y)}`); g.tail.setAttribute("opacity", on ? "0.7" : "0"); },
     },
-    // occhiali da sole che scendono dall'alto: "cool"
-    occhiali: {
-      dur: 6500, color: null, auto: true,
-      init(o, g) { const c = mk(o.r.fx, "g", {}); mk(c, "rect", { x: 36.5, y: -6, width: 19, height: 12, rx: 4, fill: "#0b0b0f", stroke: "#94a3b8", "stroke-width": 0.9 }); mk(c, "rect", { x: 64.5, y: -6, width: 19, height: 12, rx: 4, fill: "#0b0b0f", stroke: "#94a3b8", "stroke-width": 0.9 }); mk(c, "path", { d: "M55.5 -2 Q60 -4.5 64.5 -2", stroke: "#94a3b8", "stroke-width": 1, fill: "none" }); mk(c, "path", { d: "M40 -3 L44 -3", stroke: "#fff", "stroke-width": 0.8, opacity: 0.6 }); g.c = c; },
-      t(o, T, k) { if (k > 0.25 && k < 0.85) { for (const e of [T.L, T.R]) { e.lb = 0.3; } T.body.rot = Math.sin(k * 30) * 2; } },
-      draw(o, t, k, s, a, g) { const cy = CY(o), down = k < 0.2 ? k / 0.2 : k > 0.85 ? Math.max(0, 1 - (k - 0.85) / 0.12) : 1, y = cy - 30 + down * 30; g.c.setAttribute("transform", `translate(0 ${f2(y)})`); },
-    },
-    // orecchie da gatto e boccuccia "w"
+    // orecchie da gatto rosa che si muovono, baffi, nasino e boccuccia "w"; ogni tanto fa le fusa e strizza gli occhi
     gattino: {
-      dur: 5500, color: "#fbcfe8", auto: true,
-      init(o, g) { const cy = CY(o); g.e = mk(o.r.fx, "g", { fill: "currentColor" }); mk(g.e, "path", { d: `M38 ${cy - 9} L41 ${cy - 17} L45 ${cy - 10}Z` }); mk(g.e, "path", { d: `M75 ${cy - 10} L79 ${cy - 17} L82 ${cy - 9}Z` }); g.m = mk(o.r.fx, "path", { d: `M54 ${cy + 11} q3 3 6 0 q3 3 6 0`, fill: "none", stroke: "currentColor", "stroke-width": 1.3, "stroke-linecap": "round" }); },
-      t(o, T, k, s, a) { for (const e of [T.L, T.R]) { e.lb = 0.6 * a; e.h = 17; e.dy = -2; } T.body.rot = Math.sin(s * 3) * 3 * a; },
-      draw(o, t, k, s, a, g) { const up = clamp(k / 0.12, 0, 1) * clamp((1 - k) / 0.12, 0, 1); g.e.setAttribute("transform", `translate(0 ${f2((1 - up) * 8)})`); g.e.setAttribute("opacity", f2(up)); g.m.setAttribute("opacity", f2(up)); },
+      dur: 6500, color: "#fbcfe8", auto: true,
+      init(o, g) {
+        const cy = CY(o);
+        g.ears = [[46, -1], [74, 1]].map(([x, side]) => { const e = mk(o.r.fx, "g", {}); mk(e, "path", { d: "M-6 2 Q-5 -9 0 -10 Q5 -9 6 2Z", fill: "currentColor" }); mk(e, "path", { d: "M-3.4 0.5 Q-2.8 -6 0 -6.6 Q2.8 -6 3.4 0.5Z", fill: "#f472b6" }); return { e, x, side }; });
+        g.wh = mk(o.r.fx, "g", { stroke: "currentColor", "stroke-width": 0.7, "stroke-linecap": "round", fill: "none" });
+        for (const sd of [-1, 1]) for (const dy of [-1.6, 0.4, 2.4]) mk(g.wh, "path", { d: `M${60 + sd * 22} ${cy + 9 + dy * 0.4} q${sd * 6} ${dy - 1} ${sd * 11} ${dy * 1.6}` });
+        g.n = mk(o.r.fx, "path", { d: `M58.6 ${cy + 7.6} h2.8 l-1.4 1.6z`, fill: "#f472b6" });
+        g.m = mk(o.r.fx, "path", { d: `M55 ${cy + 10.4} q2.5 2.6 5 0 q2.5 2.6 5 0`, fill: "none", stroke: "currentColor", "stroke-width": 1.2, "stroke-linecap": "round" });
+      },
+      t(o, T, k, s, a) { const purr = k > 0.45 && k < 0.75; for (const e of [T.L, T.R]) { e.lb = (purr ? 0.62 : 0.45) * a; e.lt = (purr ? 0.25 : 0) * a; e.h = 18; e.dy = 1; } T.body.rot = Math.sin(s * 2.4) * 3 * a; if (purr) T.body.y += Math.sin(s * 40) * 0.25; },
+      draw(o, t, k, s, a, g) {
+        const up = clamp(k / 0.12, 0, 1) * clamp((1 - k) / 0.12, 0, 1), cy = CY(o);
+        g.ears.forEach(({ e, x, side }, i) => { const tw = Math.max(0, Math.sin(s * 3 + i * 2)) > 0.97 ? 12 : 0; e.setAttribute("transform", `translate(${x + side * 7} ${f2(cy - 9.5 + (1 - up) * 10)}) rotate(${f2(side * (22 + tw))}) scale(0.85)`); e.setAttribute("opacity", f2(up)); });
+        [g.wh, g.n, g.m].forEach((n) => n.setAttribute("opacity", f2(up)));
+        g.wh.setAttribute("transform", `translate(0 ${f2(Math.sin(s * 5) * 0.4)})`);
+      },
     },
     // legge un libro: righe da sinistra a destra, a capo, e ogni tanto gira pagina (battito di ciglia)
     lettura: {
@@ -400,12 +403,27 @@
       t(o, T, k) { const on = k > 0.08 && k < 0.92; T.L.op = T.R.op = on ? 0 : 1; T.body.y -= on ? Math.abs(Math.sin(k * 40)) * 1.5 : 0; },
       draw(o, t, k, s, a, g) { const beat = 4.4 + Math.max(0, Math.sin(s * 7)) ** 6 * 1.2; g.h.forEach((h, i) => h.setAttribute("transform", `translate(${[46, 74][i]} ${CY(o)}) scale(${f2(a * beat)})`)); },
     },
-    // Carnevale: mascherina colorata sugli occhi e coriandoli
+    // Carnevale: mascherina dorata con le piume, coriandoli e stelle filanti che scendono
     maschera: {
-      dur: 6500, color: null, auto: false,
-      init(o, g) { const cy = CY(o); g.m = mk(o.r.fx, "path", { d: `M30 ${cy - 6} Q46 ${cy - 13} 60 ${cy - 4} Q74 ${cy - 13} 90 ${cy - 6} Q90 ${cy + 8} 74 ${cy + 7} Q60 ${cy + 3} 46 ${cy + 7} Q30 ${cy + 8} 30 ${cy - 6}Z M40 ${cy - 4} h12 v8 h-12Z M68 ${cy - 4} h12 v8 h-12Z`, "fill-rule": "evenodd", fill: "#a855f7", stroke: "#facc15", "stroke-width": 0.8, opacity: 0 }); const b = BX(o), col = ["#f472b6", "#facc15", "#4ade80", "#60a5fa"]; g.c = Array.from({ length: 22 }, (_, i) => ({ n: mk(o.r.fxb, "rect", { width: 1.6, height: 1, fill: col[i % 4] }), x: b.l + prand(i) * (b.r - b.l), sp: 8 + prand(i, 1) * 8, off: prand(i, 2) * 40 })); },
-      t(o, T, k, s, a) { for (const e of [T.L, T.R]) { e.w = 11; e.h = 7; e.rr = 3; e.lb = 0.2; } T.body.rot = Math.sin(s * 3) * 3 * a; },
-      draw(o, t, k, s, a, g) { g.m.setAttribute("opacity", f2(a)); const b = BX(o); g.c.forEach((c) => { c.n.setAttribute("transform", `translate(${f2(c.x + Math.sin(s * 2 + c.off) * 2)} ${f2(b.t - 3 + ((s * c.sp + c.off) % (b.b - b.t + 6)))}) rotate(${f2(s * 180 + c.off * 9)})`); c.n.setAttribute("opacity", f2(a)); }); },
+      dur: 7000, color: null, auto: false,
+      init(o, g) {
+        const cy = CY(o), b = BX(o), col = ["#f472b6", "#facc15", "#4ade80", "#60a5fa", "#c084fc"];
+        g.f = mk(o.r.fx, "g", {});
+        [["#f472b6", -18], ["#c084fc", -4], ["#60a5fa", 10]].forEach(([c, r]) => mk(g.f, "path", { d: "M0 0 Q-3 -8 0 -15 Q3 -8 0 0Z", fill: c, transform: `rotate(${r})` }));
+        g.m = mk(o.r.fx, "path", { d: `M28 ${cy - 4} Q34 ${cy - 14} 46 ${cy - 12} Q55 ${cy - 11} 60 ${cy - 6} Q65 ${cy - 11} 74 ${cy - 12} Q86 ${cy - 14} 92 ${cy - 4} Q92 ${cy + 9} 78 ${cy + 10} Q66 ${cy + 10} 60 ${cy + 4} Q54 ${cy + 10} 42 ${cy + 10} Q28 ${cy + 9} 28 ${cy - 4}Z M37 ${cy} a9 10 0 1 0 18 0 a9 10 0 1 0 -18 0Z M65 ${cy} a9 10 0 1 0 18 0 a9 10 0 1 0 -18 0Z`, "fill-rule": "evenodd", fill: "#7c3aed", stroke: "#facc15", "stroke-width": 1 });
+        g.dots = [[33, cy + 4], [87, cy + 4], [60, cy - 1]].map(([x, y]) => mk(o.r.fx, "circle", { cx: x, cy: y, r: 1, fill: "#facc15" }));
+        g.c = Array.from({ length: 24 }, (_, i) => ({ n: mk(o.r.fxb, "rect", { width: 1.8, height: 1.1, fill: col[i % 5] }), x: b.l + prand(i) * (b.r - b.l), sp: 7 + prand(i, 1) * 7, off: prand(i, 2) * 40 }));
+        g.st = [0, 1, 2].map((i) => ({ n: mk(o.r.fxb, "path", { fill: "none", stroke: col[i + 1], "stroke-width": 0.9, "stroke-linecap": "round" }), x: [-10, 112, 136][i], off: i * 0.33 }));
+      },
+      t(o, T, k, s, a) { for (const e of [T.L, T.R]) { e.lb = 0.4 * a; } T.body.rot = Math.sin(s * 3) * 3 * a; T.body.y -= Math.abs(Math.sin(s * 6)) * 1.2 * a; },
+      draw(o, t, k, s, a, g) {
+        const cy = CY(o), b = BX(o), down = 1 - Math.min(1, k * 7), y = -down * 20;
+        g.m.setAttribute("transform", `translate(0 ${f2(y)})`); g.m.setAttribute("opacity", f2(a));
+        g.dots.forEach((d) => { d.setAttribute("transform", `translate(0 ${f2(y)})`); d.setAttribute("opacity", f2(a)); });
+        g.f.setAttribute("transform", `translate(90 ${f2(cy - 6 + y)}) rotate(${f2(20 + Math.sin(s * 4) * 6)})`); g.f.setAttribute("opacity", f2(a));
+        g.c.forEach((c) => { c.n.setAttribute("transform", `translate(${f2(c.x + Math.sin(s * 2 + c.off) * 2)} ${f2(b.t - 3 + ((s * c.sp + c.off) % (b.b - b.t + 6)))}) rotate(${f2(s * 180 + c.off * 9)})`); c.n.setAttribute("opacity", f2(a)); });
+        g.st.forEach((st) => { const q = (s * 0.35 + st.off) % 1, y0 = b.t - 6 + q * 46; let d = `M${st.x} ${f2(y0)}`; for (let j = 1; j <= 6; j++) d += ` q${f2(Math.sin(s * 3 + j) * 3)} 2 0 4`; st.n.setAttribute("d", d); st.n.setAttribute("opacity", f2(a * Math.sin(q * Math.PI))); });
+      },
     },
     // 1 aprile: un pesce attraversa la tacca, gli occhi lo seguono, poi ride
     pesce: {
@@ -429,19 +447,45 @@
       t(o, T, k, s, a) { for (const e of [T.L, T.R]) { e.dy = 2 * a; } if (k > 0.55 && k < 0.65) { for (const e of [T.L, T.R]) { e.w = 17; e.h = 24; e.rr = 8.5; } } if (k >= 0.65) { T.L.lb = T.R.lb = 0.55; } },
       draw(o, t, k, s, a, g) { const wob = k < 0.5 ? Math.sin(s * 9) * 10 * k : 0; g.e.setAttribute("transform", `translate(98 ${g.cy}) rotate(${f2(wob)})`); g.cr.setAttribute("opacity", k > 0.45 ? "1" : "0"); g.e.setAttribute("opacity", f2(a * (k > 0.6 ? 0.25 : 1))); g.ch.setAttribute("opacity", f2(k > 0.58 ? a : 0)); g.ch.setAttribute("transform", `translate(98 ${f2(g.cy - (k > 0.58 ? Math.min(1, (k - 0.58) * 12) * 5 : 0))})`); },
     },
-    // 2 giugno (e 25 aprile): passano le Frecce Tricolori
+    // 2 giugno (e 25 aprile): le Frecce Tricolori passano in formazione, fanno un arco e lasciano una scia verde, bianca e rossa che svanisce
     frecce: {
-      dur: 6000, color: null, auto: false,
-      init(o, g) { g.l = ["#22c55e", "#f8fafc", "#ef4444"].map((c) => mk(o.r.fxb, "path", { stroke: c, "stroke-width": 1.8, "stroke-linecap": "round", fill: "none", opacity: 0.9 })); g.j = [0, 1, 2].map(() => mk(o.r.fx, "path", { d: "M0 0 l-3 -1.2 l0.8 1.2 l-0.8 1.2Z", fill: "#e2e8f0" })); },
-      t(o, T, k) { const b = 0, p = clamp((k - 0.1) / 0.6, 0, 1); for (const [e, cx] of [[T.L, 46], [T.R, 74]]) { e.dx = (-5 + p * 10); e.dy = -2; e.w = 16; e.h = 22; } if (k > 0.75) T.L.lb = T.R.lb = 0.55; },
-      draw(o, t, k, s, a, g) { const b = BX(o), p = clamp((k - 0.1) / 0.6, 0, 1), x = b.l + p * (b.r - b.l + 20); g.l.forEach((l, i) => { const y = b.t + 6 + i * 3.2 + Math.sin(p * 6) * 2; l.setAttribute("d", `M${f2(b.l - 10)} ${f2(y + 2)} Q${f2((b.l + x) / 2)} ${f2(y - 3)} ${f2(x - 3)} ${f2(y)}`); l.setAttribute("opacity", f2(0.9 * a)); g.j[i].setAttribute("transform", `translate(${f2(x)} ${f2(y)})`); g.j[i].setAttribute("opacity", f2(p > 0 && p < 1 ? 1 : 0)); }); },
+      dur: 7000, color: null, auto: false,
+      init(o, g) {
+        g.l = ["#22c55e", "#f8fafc", "#ef4444"].map((c) => mk(o.r.fxb, "path", { stroke: c, "stroke-width": 2, "stroke-linecap": "round", "stroke-linejoin": "round", fill: "none" }));
+        g.j = [0, 1, 2].map(() => { const j = mk(o.r.fx, "g", {}); mk(j, "path", { d: "M3.4 0 L-2.6 -2.4 L-1.4 0 L-2.6 2.4Z", fill: "#e2e8f0" }); mk(j, "path", { d: "M-1.6 0 L-3.4 -1 L-3 0 L-3.4 1Z", fill: "#3b82f6" }); return j; });
+      },
+      // traiettoria: entra da sinistra in basso, sale ad arco sopra gli occhi ed esce a destra
+      p(q) { const b = { l: -40, r: 165 }; const x = b.l + q * (b.r - b.l), y = 74 - Math.sin(q * Math.PI) * 26; return [x, y]; },
+      t(o, T, k, s, a) { const [x, y] = this.p(clamp((k - 0.05) / 0.8, 0, 1)); for (const [e, cx] of [[T.L, 46], [T.R, 74]]) { e.dx = clamp((x - cx) * 0.12, -5, 5) * a; e.dy = clamp((y - 61) * 0.3, -4, 3) * a; e.w = 16; e.h = 22; } if (k > 0.82) { T.L.lb = T.R.lb = 0.55; T.body.y -= Math.abs(Math.sin(s * 8)) * 1.5; } },
+      draw(o, t, k, s, a, g) {
+        const q = clamp((k - 0.05) / 0.8, 0, 1), fade = 1 - clamp((k - 0.85) / 0.13, 0, 1);
+        g.l.forEach((l, i) => {
+          const off = (i - 1) * 3.4; let d = "";
+          for (let n = 0; n <= 24; n++) { const qq = Math.max(0, q - 0.45 + (n / 24) * 0.45); const [x, y] = this.p(qq), [x2, y2] = this.p(Math.min(1, qq + 0.01)), an = Math.atan2(y2 - y, x2 - x); d += (n ? "L" : "M") + f2(x - Math.sin(an) * off) + " " + f2(y + Math.cos(an) * off); }
+          l.setAttribute("d", d); l.setAttribute("opacity", f2(0.9 * a * fade));
+          const [x, y] = this.p(q), [x2, y2] = this.p(Math.min(1, q + 0.01)), an = Math.atan2(y2 - y, x2 - x);
+          g.j[i].setAttribute("transform", `translate(${f2(x - Math.sin(an) * off + 1.5)} ${f2(y + Math.cos(an) * off)}) rotate(${f2(an * 180 / Math.PI)})`); g.j[i].setAttribute("opacity", f2(q > 0 && q < 1 ? a : 0));
+        });
+      },
     },
-    // estate e Ferragosto: sole che splende e occhiali da sole
+    // estate e Ferragosto: sole che pulsa, occhiali da sole con il riflesso, onde del mare e un pallone da spiaggia
     sole: {
-      dur: 7000, color: "#fde047", auto: false,
-      init(o, g) { const sn = mk(o.r.fxb, "g", {}); mk(sn, "circle", { r: 4.5, fill: "#fde047" }); for (let i = 0; i < 8; i++) mk(sn, "rect", { x: -0.5, y: -8.5, width: 1, height: 2.6, rx: 0.5, fill: "#fde047", transform: `rotate(${i * 45})` }); g.s = sn; EGGS.occhiali.init(o, g); },
-      t(o, T, k, s, a) { EGGS.occhiali.t(o, T, k); for (const e of [T.L, T.R]) e.lt = Math.max(e.lt, 0.2); },
-      draw(o, t, k, s, a, g) { g.s.setAttribute("transform", `translate(${BX(o).r - 10} ${BX(o).t + 9}) rotate(${f2(s * 30)}) scale(${f2(a)})`); EGGS.occhiali.draw(o, t, k, s, a, g); },
+      dur: 7500, color: "#fde047", auto: false,
+      init(o, g) {
+        const sn = mk(o.r.fxb, "g", {}); g.rays = mk(sn, "g", {}); for (let i = 0; i < 10; i++) mk(g.rays, "rect", { x: -0.6, y: -9.5, width: 1.2, height: 3, rx: 0.6, fill: "#fde047", transform: `rotate(${i * 36})` }); mk(sn, "circle", { r: 5, fill: "#fde047" }); g.s = sn;
+        const c = mk(o.r.fx, "g", {}); [36.5, 64.5].forEach((x) => mk(c, "rect", { x, y: -6, width: 19, height: 12, rx: 4.5, fill: "#0b0b0f", stroke: "#f59e0b", "stroke-width": 1 })); mk(c, "path", { d: "M55.5 -2 Q60 -4.5 64.5 -2", stroke: "#f59e0b", "stroke-width": 1, fill: "none" }); g.sh = [38, 66].map((x) => mk(c, "path", { d: `M${x} -4 l4 0 l-6 9 l-3 0z`, fill: "#fff", opacity: 0.35 })); g.c = c;
+        g.w = [0, 1].map((i) => mk(o.r.fxb, "path", { fill: "none", stroke: i ? "#7dd3fc" : "#38bdf8", "stroke-width": 1.2, "stroke-linecap": "round", opacity: 0.8 }));
+        const ball = mk(o.r.fx, "g", {}); ["#ef4444", "#f8fafc", "#3b82f6", "#facc15"].forEach((col, i) => mk(ball, "path", { d: "M0 0 L0 -3.6 A3.6 3.6 0 0 1 3.6 0Z", fill: col, transform: `rotate(${i * 90})` })); g.b = ball;
+      },
+      t(o, T, k, s, a) { if (k > 0.22 && k < 0.85) { for (const e of [T.L, T.R]) { e.lb = 0.32; } T.body.rot = Math.sin(s * 3) * 2.5; } for (const e of [T.L, T.R]) e.lt = Math.max(e.lt, 0.2 * a); },
+      draw(o, t, k, s, a, g) {
+        const b = BX(o), cy = CY(o);
+        g.s.setAttribute("transform", `translate(${b.l + 12} ${b.t + 8}) scale(${f2(a * (1 + Math.sin(s * 3) * 0.06))})`); g.rays.setAttribute("transform", `rotate(${f2(s * 25)})`);
+        const down = k < 0.2 ? k / 0.2 : k > 0.85 ? Math.max(0, 1 - (k - 0.85) / 0.12) : 1; g.c.setAttribute("transform", `translate(0 ${f2(cy - 30 + down * 30)})`);
+        const sl = ((s * 0.5) % 1) * 30 - 10; g.sh.forEach((p) => p.setAttribute("transform", `translate(${f2(sl)} 0)`));
+        g.w.forEach((w, i) => { let d = ""; for (let n = 0; n <= 30; n++) { const x = b.l + n * 6.2, y = 77.5 - i * 2.2 + Math.sin(n * 0.8 + s * (2.4 + i)) * 0.9; d += (n ? "L" : "M") + f2(x) + " " + f2(y); } w.setAttribute("d", d); w.setAttribute("opacity", f2(0.8 * a)); });
+        const q = (s * 0.8) % 1; g.b.setAttribute("transform", `translate(${f2(b.r - 18 + Math.sin(s * 0.8) * 6)} ${f2(74 - Math.abs(Math.sin(q * Math.PI)) * 14)}) rotate(${f2(s * 200)})`); g.b.setAttribute("opacity", f2(a));
+      },
     },
     // autunno: foglie che cadono girando
     foglie: {
@@ -518,7 +562,7 @@
     // Pi Day (14 marzo, 3/14): passa il pi greco con le sue cifre, gli occhi le leggono
     pigreco: {
       dur: 7000, color: "#a5b4fc", auto: false,
-      init(o, g) { g.t = mk(o.r.fx, "text", { y: CY(o) + 14, "font-size": 5.5, "font-family": "ui-monospace,Consolas,monospace", fill: "#c7d2fe" }); g.t.textContent = "π = 3,14159 26535 89793 23846"; g.pi = mk(o.r.fx, "text", { x: 98, y: CY(o) - 3, "font-size": 11, "font-weight": 700, "font-family": "Georgia,serif", fill: "#a5b4fc", opacity: 0 }); g.pi.textContent = "π"; },
+      init(o, g) { g.t = mk(o.r.fx, "text", { y: CY(o) + 14, "font-size": 5.5, "font-family": "ui-monospace,Consolas,monospace", fill: "#c7d2fe" }); g.t.textContent = Iris.lang === "en" ? "π = 3.14159 26535 89793 23846" : "π = 3,14159 26535 89793 23846"; g.pi = mk(o.r.fx, "text", { x: 98, y: CY(o) - 3, "font-size": 11, "font-weight": 700, "font-family": "Georgia,serif", fill: "#a5b4fc", opacity: 0 }); g.pi.textContent = "π"; },
       pos(o, k) { const b = BX(o); return b.r + 5 - clamp((k - 0.05) / 0.85, 0, 1) * (b.r - b.l + 95); },
       t(o, T, k, s, a) { const x = this.pos(o, k); for (const e of [T.L, T.R]) { e.dx = clamp((x + 40 - 60) * 0.06, -5, 5) * a; e.dy = 3 * a; e.lt = 0.2 * a; } },
       draw(o, t, k, s, a, g) { g.t.setAttribute("x", f2(this.pos(o, k))); g.t.setAttribute("opacity", f2(a)); g.pi.setAttribute("opacity", f2(a * (0.6 + 0.4 * Math.sin(s * 3)))); },
@@ -888,7 +932,7 @@
         ${island ? "" : `<rect x="14" y="40" width="92" height="58" rx="29" fill="${FACE}"/>`}
         <g ${island ? "" : `clip-path="url(#${id}b)"`}>
           <g data-r="fxb"></g>${eye("L")}${eye("R")}<g data-r="fx"></g><g data-r="vfx"></g>
-          <g data-r="dots" fill="currentColor" opacity="0"><circle cx="85" r="1.4"/><circle cx="91" r="1.85"/><circle cx="97.5" r="2.3"/></g>
+          <g data-r="dots" fill="currentColor" opacity="0"><circle cx="86" r="1.8"/><circle cx="91.5" r="1.8"/><circle cx="97" r="1.8"/></g>
           <circle data-r="ball" r="2.3" fill="currentColor" opacity="0"/>
           <g data-r="waves" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" opacity="0">
             <path d="M86 56 Q89.5 61 86 66"/><path d="M90.5 53 Q96 61 90.5 69"/><path d="M34 56 Q30.5 61 34 66"/><path d="M29.5 53 Q24 61 29.5 69"/></g>
@@ -990,8 +1034,8 @@
     drawEye(r, "L", c.L, 46, cy, blink); drawEye(r, "R", c.R, 74, cy, blink);
     const b = c.body;
     r.body.setAttribute("transform", `translate(${f2(b.x)} ${f2(b.y)}) rotate(${f2(b.rot)} 60 98) translate(60 98) scale(${b.sx.toFixed(4)} ${b.sy.toFixed(4)}) translate(-60 -98)`);
-    // puntini a scalare, salgono verso destra; restano dentro la bolla
-    const dy = o.island ? [50, 47.5, 45] : [56, 53, 50];
+    // tre puntini uguali e in fila, che saltellano a turno; restano dentro la bolla
+    const dy = o.island ? [47.5, 47.5, 47.5] : [53, 53, 53]; // tre puntini dritti, in fila
     r.dots.setAttribute("opacity", f2(c.dots));
     if (c.dots > 0.02) [...r.dots.children].forEach((d, i) => { const k = Math.max(0, Math.sin(t / 170 - i * 0.9)); d.setAttribute("cy", f2(dy[i] - k * 1.8)); d.setAttribute("opacity", f2(0.45 + k * 0.55)); });
     drawEgg(o, t);

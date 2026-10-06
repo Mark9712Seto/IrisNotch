@@ -4,6 +4,7 @@
 
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::{AppHandle, Manager};
 
 const KEYRING_SERVICE: &str = "IrisVolto";
@@ -21,6 +22,8 @@ pub struct Stt {
     /// minuti di inattività dopo cui il modello lascia la scheda video (0 = mai)
     pub unload_minutes: u64,
     pub send_without_preview: bool,
+    /// voce compatta: con l'isola chiusa la scorciatoia "premi e parla" usa solo la tacca, senza aprire la chat
+    pub compact: bool,
 }
 
 impl Default for Stt {
@@ -33,6 +36,7 @@ impl Default for Stt {
             language: "it".into(),
             unload_minutes: 10,
             send_without_preview: false,
+            compact: true,
         }
     }
 }
@@ -100,7 +104,7 @@ pub struct Island {
     pub screen: String,
     /// "hover" (passando sopra) oppure "click"
     pub open: String,
-    /// grandezza di tutta l'app: 0.85 piccola, 1 normale, 1.2 grande
+    /// grandezza di tutta l'app, a passi da −3 a +4: 0.85, 0.9, 0.95, 1 (normale), 1.05, 1.1, 1.2, 1.3
     pub zoom: f64,
     /// passando sopra: dopo quanti millisecondi si apre
     pub open_delay: u32,
@@ -135,6 +139,8 @@ impl Default for Island {
 #[derive(Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct Settings {
+    /// lingua dell'app: "it" o "en" (vuota = la sceglie l'interfaccia dalla lingua di Windows)
+    pub language: String,
     pub hermes_url: String,
     pub stt: Stt,
     pub tts: Tts,
@@ -198,16 +204,32 @@ fn path(app: &AppHandle) -> PathBuf {
     dir.join("settings.json")
 }
 
+/// lingua dei messaggi che partono da qui (errori, avanzamento, menu dell'icona): segue le impostazioni
+static EN: AtomicBool = AtomicBool::new(false);
+pub fn en() -> bool {
+    EN.load(Ordering::Relaxed)
+}
+/// il testo nella lingua scelta
+pub fn t(it: &str, en: &str) -> String {
+    (if self::en() { en } else { it }).to_string()
+}
+fn set_lang(s: &Settings) {
+    EN.store(s.language == "en", Ordering::Relaxed);
+}
+
 pub fn load(app: &AppHandle) -> Settings {
-    std::fs::read_to_string(path(app))
+    let s: Settings = std::fs::read_to_string(path(app))
         .ok()
         .and_then(|s| serde_json::from_str(&s).ok())
-        .unwrap_or_default()
+        .unwrap_or_default();
+    set_lang(&s);
+    s
 }
 
 pub fn save(app: &AppHandle, s: &Settings) -> Result<(), String> {
+    set_lang(s);
     let json = serde_json::to_string_pretty(s).map_err(|e| e.to_string())?;
-    std::fs::write(path(app), json).map_err(|e| format!("Non riesco a salvare le impostazioni: {e}"))
+    std::fs::write(path(app), json).map_err(|e| format!("{}: {e}", t("Non riesco a salvare le impostazioni", "Can't save the settings")))
 }
 
 pub fn get_secret(name: &str) -> Option<String> {
@@ -216,7 +238,7 @@ pub fn get_secret(name: &str) -> Option<String> {
 
 pub fn set_secret(name: &str, value: &str) -> Result<(), String> {
     let entry = keyring::Entry::new(KEYRING_SERVICE, name).map_err(|e| e.to_string())?;
-    entry.set_password(value).map_err(|e| format!("Non riesco a salvare la chiave nel Gestore credenziali: {e}"))
+    entry.set_password(value).map_err(|e| format!("{}: {e}", t("Non riesco a salvare la chiave nel Gestore credenziali", "Can't save the key in Credential Manager")))
 }
 
 /// Quello che vede l'interfaccia: le impostazioni più "chiave presente sì/no".

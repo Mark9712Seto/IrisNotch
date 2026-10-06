@@ -7,7 +7,7 @@ use std::time::Duration;
 pub async fn synthesize(url: &str, voice: &str, speed: f32, key: Option<String>, text: &str) -> Result<Vec<u8>, String> {
     let url = url.trim().trim_end_matches('/');
     if url.is_empty() {
-        return Err("Indirizzo del server TTS non impostato".into());
+        return Err(crate::settings::t("Indirizzo del server TTS non impostato", "TTS server address not set"));
     }
     let body = json!({
         "model": "tts-1",
@@ -20,9 +20,9 @@ pub async fn synthesize(url: &str, voice: &str, speed: f32, key: Option<String>,
     if let Some(k) = key {
         rb = rb.bearer_auth(k);
     }
-    let r = rb.send().await.map_err(|e| format!("Server TTS non raggiungibile: {e}"))?;
+    let r = rb.send().await.map_err(|e| format!("{}: {e}", crate::settings::t("Server TTS non raggiungibile", "TTS server can't be reached")))?;
     if !r.status().is_success() {
-        return Err(format!("Il server TTS ha risposto {}", r.status()));
+        return Err(format!("{} {}", crate::settings::t("Il server TTS ha risposto", "The TTS server replied"), r.status()));
     }
     Ok(r.bytes().await.map_err(|e| e.to_string())?.to_vec())
 }

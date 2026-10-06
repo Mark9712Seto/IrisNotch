@@ -2,7 +2,7 @@
 
 *[Leggi in italiano](installazione.md)*
 
-> The interface is in Italian for now. Labels below are given in Italian with their meaning in brackets.
+> Since 0.2.2 the app is in English and Italian: it follows the Windows language on first start, and you can change it in **Settings → General → Language**. Labels below are given in Italian with their meaning in brackets, for older versions.
 
 ## 1. Download
 
@@ -11,6 +11,8 @@
 3. To try a build newer than the latest Release: **Actions** → the latest green **Build** run → at the bottom, under **Artifacts**, **Iris-Notch-Windows** (a zip with the installer and `iris-volto.exe`, the program on its own, no install needed).
 
 > ⚠️ **Windows SmartScreen** will say "Windows protected your PC", because the program isn't code-signed. Click **More info → Run anyway**. This happens with every unsigned program; signing requires a paid certificate.
+
+You need **Hermes Agent 0.21 or newer**: older versions save the conversation but don't pass it back to the model, so every question is answered as if it were the first one (update with `hermes update`).
 
 It needs **WebView2**, which is already there on up-to-date Windows 10/11. If it's missing, the installer downloads it. Nothing else to install: no Python, no runtimes.
 
@@ -55,7 +57,15 @@ The GPU is used through **Vulkan**, which comes with the graphics drivers: no ne
 - **Hold** `Ctrl+Alt+Space`, speak, release;
 - or click the **microphone** in the island, speak, click it again.
 
-**"Ho capito questo"** *(here's what I heard)* appears with editable text: fix it if needed and press **Invia** *(send)* or Enter. To skip the preview, turn on *Invia subito* *(send right away)*.
+**Here's what I heard** appears with editable text: fix it if needed and press **Send** or Enter. To skip the preview, turn on *Send right away*.
+
+**Compact voice** (on by default, can be turned off in *Speech to text*): if you use the shortcut **while the island is closed**, the chat doesn't open. The notch stretches a little and shows what it heard:
+
+- **Enter**, the check mark or **a short tap** of the shortcut: send;
+- **Esc** or the X: cancel;
+- **hold** the shortcut again: speak again from scratch.
+
+With *Send right away* a green bar empties in a couple of seconds, then the question is sent (Esc stops it). While Iris works the notch stays small, with the status next to the eyes; the **reply** shows up inside it (scroll it with the mouse wheel) and after a few seconds the notch goes back to normal. If the agent needs **approval**, it asks in the notch: **Enter** allows once, **Esc** denies, long commands scroll with the mouse wheel. **Click the eyes** to open the full chat and see everything. Enter and Esc work even while you're typing in another app, but only for the few seconds the notch is asking for them.
 
 ## 5. Spoken replies
 
@@ -81,13 +91,13 @@ Engines:
   - **Si richiude** *(closes)* 0.7–5 seconds after the mouse leaves; from 1 second up, a small bar counts down;
   - **Occhi che seguono** *(eyes follow)* the mouse, can be turned off;
   - **Rimettila al centro** *(put it back in the center)*.
-- Settings → **Generale** *(general)*: your **birthday** (day and month: confetti on that day), **Avvia con Windows** *(start with Windows)*, the **black frame** around the eyes (0–16 px) and the **size** of the whole app (Piccola / Normale / Grande: small, normal, large).
+- Settings → **Generale** *(general)*: the **language** (English or Italian: interface, local voices and transcription; the app reloads), your **birthday** (day and month: confetti on that day), **Avvia con Windows** *(start with Windows)*, the **black frame** around the eyes (0–16 px) and the **size** of the whole app (from −3 to +4 in small steps; 0 is normal).
 - With the **pin** on and the island open, grabbing it by the eyes moves the whole open window. Drop it past an edge or over the taskbar and it springs back inside; otherwise it stays exactly where you left it.
 - Settings → **Debug e prove** *(debug and tests)*: debug mode (detailed log), **Mostra l'area** *(show the area where the eyes play)*, latest errors and the log folder.
 - Every option has a **?**: hover it to see what it does.
 - **Changes only apply when you press Salva** *(save)*. As soon as you change something, **Annulla** *(cancel)* appears and the island won't close by itself until you choose. Cancel, the **back arrow**, `Esc` or the **settings icon** again discard the changes and close.
 
-Poke the eyes 3 times in a row and it giggles; 7 times and it gets dizzy.
+Poke the eyes 3 times in a row and it giggles; 7 times and it gets dizzy. Stroke it slowly back and forth with the mouse and it purrs; drag it fast and it squints against the wind; let it go and it lands with a bounce. If a reply arrives while the island is closed, an envelope flies in.
 
 **By time of day**, when you open the island (once per part of the day): dark circles in the dead of night, yawning very early, coffee in the morning, sometimes a stretch in the late afternoon, relaxed with a few stars in the evening.
 
@@ -119,8 +129,8 @@ The title at the top opens the menu:
 | 📌 | keeps it open even when the mouse leaves |
 | `Esc` | closes settings, voice preview or the island |
 | Notification-area icon | *open / close the island* and **quit Iris Notch** (the app isn't on the taskbar) |
-| Start with Windows | in the settings, Generale section |
-| Updates | a green dot on the settings icon tells you when a new version is on GitHub: download and install it yourself |
+| Start with Windows | in the settings, General section |
+| Updates | twice a day it checks GitHub; a green dot on the settings icon and "New version" under the version number tell you one is out: download and install it yourself |
 
 ## Known issues
 

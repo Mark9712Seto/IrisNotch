@@ -31,7 +31,7 @@ jobs:
           python3 tools/bundle_demo.py
           cp -r site/. _site/
           cp design/isola-demo.html _site/demo.html
-          cp app/ui/eyes.js _site/eyes.js
+          cp app/ui/eyes.js app/ui/eyes-nuove.js app/ui/eyes-nuove2.js _site/
           mkdir -p _site/images && cp docs/images/* _site/images/
           touch _site/.nojekyll
       - uses: actions/configure-pages@v5
