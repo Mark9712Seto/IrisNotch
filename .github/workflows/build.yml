@@ -151,6 +151,8 @@ jobs:
     needs: windows
     if: github.event_name == 'workflow_dispatch' && inputs.release && github.event.repository.visibility == 'public'
     runs-on: windows-latest
+    # finché Microsoft non ha accettato la prima versione questo passo non può riuscire: non deve far diventare rossa la release
+    continue-on-error: true
     env:
       WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
     steps:
